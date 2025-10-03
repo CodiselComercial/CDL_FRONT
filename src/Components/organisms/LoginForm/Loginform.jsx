@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Title from '../../atoms/Title/Title';
 import FormField from '../../molecules/Forms/Form';
 import Button from '../../atoms/Button/Button';
 import styles from '../LoginForm/Loginform.module.css';
 
 const LoginForm = () => {
+  const navigate = useNavigate();
+
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
@@ -20,31 +23,38 @@ const LoginForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Enviar datos a un servidor
     console.log('Datos enviados:', credentials);
     alert(`Bienvenido, ${credentials.username}!`);
+    navigate('/precios'); // 👈 Navega directo a PriceListPage
   };
 
   return (
     <form className={styles.loginForm} onSubmit={handleSubmit}>
-      <Title text="Iniciar Sesión" />
+      <div className={styles.logoContainer}>
+        <img 
+          src="https://codisel.com.mx/wp-content/uploads/2019/02/logo-codisel-web-1.png" 
+          alt="Logo de Codisel" 
+          className={styles.logo}
+        />
+      </div>
+
       <FormField
-        label="Usuario"
-        type="text"
-        placeholder="ej. juanperez"
-        name="username"
+        label="Correo electrónico" 
+        type="email"
+        placeholder="Correo electrónico"
+        name="username" 
         value={credentials.username}
         onChange={handleChange}
       />
       <FormField
         label="Contraseña"
         type="password"
-        placeholder="••••••••"
+        placeholder="Contraseña"
         name="password"
         value={credentials.password}
         onChange={handleChange}
       />
-      <Button type="submit">Ingresar</Button>
+      <Button type="submit">Acceder</Button>
     </form>
   );
 };
