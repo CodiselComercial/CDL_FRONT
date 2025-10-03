@@ -1,0 +1,79 @@
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.actionButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actionButton.edit {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.actionButton.edit:hover:not(:disabled) {
+  background-color: #fde68a;
+  border-color: #d97706;
+}
+
+.actionButton.delete {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.actionButton.delete:hover:not(:disabled) {
+  background-color: #fecaca;
+  border-color: #dc2626;
+}
+
+.actionButton.view {
+  background-color: #e0e7ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.actionButton.view:hover:not(:disabled) {
+  background-color: #c7d2fe;
+  border-color: #4f46e5;
+}
+
+.actionButton.small {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.actionButton.small .label {
+  display: none;
+}
+
+.actionButton.medium {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+.actionButton.large {
+  padding: 8px 16px;
+  font-size: 1rem;
+}
+
+.label {
+  font-weight: 500;
+}

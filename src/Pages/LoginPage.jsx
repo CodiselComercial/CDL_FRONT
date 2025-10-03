@@ -2,10 +2,10 @@ import React from 'react';
 import LoginForm from '../Components/organisms/LoginForm/Loginform';
 import './LoginPage.css';
 
-const LoginPage = () => {
+const LoginPage = ({ onLogin }) => {
   return (
     <div className="login-page-container">
-      <LoginForm />
+      <LoginForm onLogin={onLogin} />
     </div>
   );
 };

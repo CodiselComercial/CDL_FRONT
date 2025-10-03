@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Title from '../../atoms/Title/Title';
 import FormField from '../../molecules/Forms/Form';
 import Button from '../../atoms/Button/Button';
 import styles from '../LoginForm/Loginform.module.css';
 
-const LoginForm = () => {
-  const navigate = useNavigate();
-
+const LoginForm = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
@@ -24,8 +21,15 @@ const LoginForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Datos enviados:', credentials);
-    alert(`Bienvenido, ${credentials.username}!`);
-    navigate('/precios'); // 👈 Navega directo a PriceListPage
+    
+    // Simular autenticación con roles
+    let userRole = 'proveedor'; // Por defecto
+    if (credentials.username.includes('compras') || credentials.username.includes('admin')) {
+      userRole = 'compras';
+    }
+    
+    alert(`Bienvenido, ${credentials.username}! Rol: ${userRole}`);
+    onLogin(userRole); // 👈 Pasa el rol al padre
   };
 
   return (

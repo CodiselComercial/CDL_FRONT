@@ -1,29 +1,29 @@
 import React from 'react';
-import { Save } from 'lucide-react';
-import Input from '../../atoms/Input/Input.jsx';
-import Button from '../../atoms/Button/Button.jsx';
+import TableInput from '../../atoms/TableInput/TableInput.jsx';
+import SaveButton from '../../atoms/SaveButton/SaveButton.jsx';
+import styles from './ProductTable.module.css';
 
 const ProductTable = ({ products, editedPrices, onPriceChange, onSave, loading }) => {
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow">
-      <table className="w-full">
-        <thead className="bg-gray-100 border-b border-gray-200">
+    <div className={styles.tableContainer}>
+      <table className={styles.table}>
+        <thead className={styles.tableHeader}>
           <tr>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Producto</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Unidad</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Precio Actual</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nuevo Precio</th>
-            <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Acciones</th>
+            <th className={styles.headerCell}>Producto</th>
+            <th className={styles.headerCell}>Unidad</th>
+            <th className={styles.headerCell}>Precio Actual</th>
+            <th className={styles.headerCell}>Nuevo Precio</th>
+            <th className={styles.headerCell}>Acciones</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
+        <tbody className={styles.tableBody}>
           {products.map((product) => (
-            <tr key={product.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 text-sm text-gray-900">{product.name}</td>
-              <td className="px-6 py-4 text-sm text-gray-600">{product.unit}</td>
-              <td className="px-6 py-4 text-sm text-gray-900">${product.price.toFixed(2)}</td>
-              <td className="px-6 py-4">
-                <Input
+            <tr key={product.id} className={styles.tableRow}>
+              <td className={styles.dataCell}>{product.name}</td>
+              <td className={styles.dataCell}>{product.unit}</td>
+              <td className={styles.priceCell}>${product.price.toFixed(2)}</td>
+              <td className={styles.inputCell}>
+                <TableInput
                   type="number"
                   value={editedPrices[product.id] || ''}
                   onChange={(e) => onPriceChange(product.id, e.target.value)}
@@ -31,17 +31,12 @@ const ProductTable = ({ products, editedPrices, onPriceChange, onSave, loading }
                   name={`price-${product.id}`}
                 />
               </td>
-              <td className="px-6 py-4 text-center">
-                <Button
+              <td className={styles.actionCell}>
+                <SaveButton
                   onClick={() => onSave(product.id)}
-                  type="button"
-                  disabled={!editedPrices[product.id] || loading}
-                >
-                  <div className="flex items-center gap-2 justify-center">
-                    <Save size={16} />
-                    Guardar
-                  </div>
-                </Button>
+                  disabled={!editedPrices[product.id]}
+                  loading={loading}
+                />
               </td>
             </tr>
           ))}

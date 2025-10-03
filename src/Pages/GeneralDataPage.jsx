@@ -1,63 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GeneralDataForm from '../Components/organisms/GeneralDataForm/GeneralDataForm.jsx';
-import Toast from '../Components/atoms/Toast/Toast.jsx';
+import styles from './GeneralDataPage.module.css';
 
 const GeneralDataPage = () => {
-  const [initialData] = useState({
-    businessName: 'Materiales y Construcción SA de CV',
-    address: 'Av. Principal 123, Col. Centro, CP 86000',
-    phone: '9931234567',
-    email: 'contacto@materiales.com'
+  const [generalData, setGeneralData] = useState({
+    businessName: 'Constructora ABC S.A. de C.V.',
+    fiscalAddress: 'Av. Reforma 123, Col. Centro, CDMX, CP 06000',
+    phone: '+52 55 1234 5678',
+    email: 'contacto@constructoraabc.com'
   });
 
-  const [data, setData] = useState(initialData);
-  const [toast, setToast] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const hasChanges = JSON.stringify(data) !== JSON.stringify(initialData);
-
-  const handleChange = (field, value) => {
-    setData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = () => {
-    if (!data.businessName || !data.address || !data.phone || !data.email) {
-      setToast({ message: 'Todos los campos son obligatorios', type: 'error' });
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      setToast({ message: 'Correo electrónico inválido', type: 'error' });
-      return;
-    }
-
-    if (window.confirm('¿Está seguro de guardar los cambios?')) {
-      setLoading(true);
+  const handleSave = async (newData) => {
+    // Simular llamada a API
+    return new Promise((resolve) => {
       setTimeout(() => {
-        setToast({ message: 'Datos actualizados correctamente', type: 'success' });
-        setLoading(false);
-      }, 500);
-    }
+        setGeneralData(newData);
+        resolve();
+      }, 1000);
+    });
   };
 
   return (
-    <div className="p-6">
-      <GeneralDataForm
-        data={data}
-        onChange={handleChange}
-        onSave={handleSave}
-        hasChanges={hasChanges}
-        loading={loading}
-      />
+    <div className={styles.pageContainer}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Datos Generales</h2>
+        <p className={styles.subtitle}>
+          Actualiza tu información administrativa y de contacto
+        </p>
+      </div>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      <GeneralDataForm
+        initialData={generalData}
+        onSave={handleSave}
+      />
     </div>
   );
 };

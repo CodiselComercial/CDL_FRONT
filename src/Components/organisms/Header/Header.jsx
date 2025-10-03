@@ -1,35 +1,78 @@
 import React from 'react';
 import { LogOut } from 'lucide-react';
-import Button from '../../atoms/Button/Button';
+import NavButton from '../../atoms/NavButton/NavButton.jsx';
+import styles from './Header.module.css';
 
-const Header = ({ currentView, onViewChange, onLogout }) => {
+const Header = ({ currentPage, onPageChange, onLogout, userRole = 'proveedor' }) => {
+  const isProvider = userRole === 'proveedor';
+  const isPurchases = userRole === 'compras';
+
   return (
-    <header className="bg-gray-800 text-white shadow-md">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Portal del Proveedor</h1>
-        <nav className="flex items-center gap-4">
-          <button
-            onClick={() => onViewChange('prices')}
-            className={`px-4 py-2 rounded-md transition-colors ${
-              currentView === 'prices' ? 'bg-gray-700' : 'hover:bg-gray-700'
-            }`}
+    <header className={styles.header}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>
+          {isProvider ? 'Portal del Proveedor' : 'Portal de Compras'}
+        </h1>
+        <nav className={styles.navigation}>
+          {isProvider && (
+            <>
+              <NavButton
+                active={currentPage === 'priceList'}
+                onClick={() => onPageChange('priceList')}
+              >
+                Lista de Precios
+              </NavButton>
+              <NavButton
+                active={currentPage === 'generalData'}
+                onClick={() => onPageChange('generalData')}
+              >
+                Datos Generales
+              </NavButton>
+            </>
+          )}
+          
+          {isPurchases && (
+            <>
+              <NavButton
+                active={currentPage === 'productList'}
+                onClick={() => onPageChange('productList')}
+              >
+                Lista de Productos
+              </NavButton>
+              <NavButton
+                active={currentPage === 'purchaseOrders'}
+                onClick={() => onPageChange('purchaseOrders')}
+              >
+                Órdenes de Compra
+              </NavButton>
+              <NavButton
+                active={currentPage === 'productCrud'}
+                onClick={() => onPageChange('productCrud')}
+              >
+                CRUD Productos
+              </NavButton>
+              <NavButton
+                active={currentPage === 'providerCrud'}
+                onClick={() => onPageChange('providerCrud')}
+              >
+                CRUD Proveedores
+              </NavButton>
+              <NavButton
+                active={currentPage === 'userCrud'}
+                onClick={() => onPageChange('userCrud')}
+              >
+                CRUD Usuarios
+              </NavButton>
+            </>
+          )}
+          
+          <NavButton
+            variant="logout"
+            onClick={onLogout}
           >
-            Lista de Precios
-          </button>
-          <button
-            onClick={() => onViewChange('general')}
-            className={`px-4 py-2 rounded-md transition-colors ${
-              currentView === 'general' ? 'bg-gray-700' : 'hover:bg-gray-700'
-            }`}
-          >
-            Datos Generales
-          </button>
-          <Button onClick={onLogout} type="button">
-            <div className="flex items-center gap-2">
-              <LogOut size={18} />
-              Salir
-            </div>
-          </Button>
+            <LogOut size={18} />
+            Salir
+          </NavButton>
         </nav>
       </div>
     </header>
