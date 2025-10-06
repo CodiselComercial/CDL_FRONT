@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2, Eye, Calculator } from 'lucide-react';
 import styles from './ActionButton.module.css';
 
 const ActionButton = ({ type, onClick, disabled = false, size = 'medium' }) => {
@@ -11,6 +11,8 @@ const ActionButton = ({ type, onClick, disabled = false, size = 'medium' }) => {
         return <Trash2 size={16} />;
       case 'view':
         return <Eye size={16} />;
+      case 'calc':
+        return <Calculator size={16} />;
       default:
         return null;
     }
@@ -24,6 +26,8 @@ const ActionButton = ({ type, onClick, disabled = false, size = 'medium' }) => {
         return 'Eliminar';
       case 'view':
         return 'Ver';
+      case 'calc':
+        return 'Calcular';
       default:
         return '';
     }
