@@ -30,6 +30,8 @@ const Dashboard = ({ userRole = 'proveedor', onLogout }) => {
         return <PriceListPage />;
       case 'generalData':
         return <GeneralDataPage />;
+
+        
       
       // Páginas para compras
       case 'productList':

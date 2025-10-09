@@ -21,6 +21,8 @@ const GeneralDataPage = () => {
   };
 
   return (
+
+    
     <div className={styles.pageContainer}>
       <div className={styles.header}>
         <h2 className={styles.title}>Datos Generales</h2>
