@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Title from '../../atoms/Title/Title';
 import FormField from '../../molecules/Forms/Form';
 import Button from '../../atoms/Button/Button';
-import styles from '../LoginForm/Loginform.module.css';
+import styles from './LoginForm.module.css';
 
 const LoginForm = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
@@ -29,7 +29,7 @@ const LoginForm = ({ onLogin }) => {
     }
     
     alert(`Bienvenido, ${credentials.username}! Rol: ${userRole}`);
-    onLogin(userRole); // 👈 Pasa el rol al padre
+    onLogin(userRole); // Pasa el rol al padre
   };
 
   return (
