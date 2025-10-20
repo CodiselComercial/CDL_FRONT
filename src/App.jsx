@@ -35,6 +35,14 @@ function App() {
           path="/dashboard" 
           element={<Dashboard userRole={userRole} onLogout={handleLogout} />} 
         />
+        <Route 
+          path="/proveedor" 
+          element={<Dashboard userRole="proveedor" onLogout={handleLogout} />} 
+        />
+        <Route 
+          path="/compras" 
+          element={<Dashboard userRole="compras" onLogout={handleLogout} />} 
+        />
       </Routes>
     </Router>
   );
