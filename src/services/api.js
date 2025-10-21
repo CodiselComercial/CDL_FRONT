@@ -55,3 +55,28 @@ export const getProductList = async (token, page = 1) => {
     throw error;
   }
 };
+
+
+export const saveProductPrice = async (token, productoId, precio) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/precios/agregar`,
+      {
+        producto: productoId,
+        precio: precio,
+        fecha_vigencia: "2025-12-31", 
+      },
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al guardar precio:', error);
+    throw error;
+  }
+};
+
