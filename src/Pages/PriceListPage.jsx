@@ -1,13 +1,13 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchBar from '../Components/molecules/SearchBar/SearchBar.jsx';
 import Pagination from '../Components/molecules/Pagination/Pagination.jsx';
 import ProductTable from '../Components/organisms/ProductTable/ProductTable.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './PriceListPage.module.css';
-import { getProductList } from '../services/api.js'; 
+import { getProductList, saveProductPrice } from '../services/api.js';
 
 const PriceListPage = () => {
-    const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [editedPrices, setEditedPrices] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showFeatured, setShowFeatured] = useState(false);
@@ -27,7 +27,7 @@ const PriceListPage = () => {
           id: p.id,
           name: p.nombre,
           unit: p.unidad,
-          price: editedPrices[p.id] || 0, 
+          price: editedPrices[p.id] || 0,
           active: true,
         }));
 
@@ -58,7 +58,7 @@ const PriceListPage = () => {
     setEditedPrices(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleSave = (id) => {
+  const handleSave = async (id) => {
     const newPrice = parseFloat(editedPrices[id]);
     if (!newPrice || newPrice <= 0) {
       setToast({ message: 'El precio debe ser mayor a cero', type: 'error' });
@@ -66,14 +66,21 @@ const PriceListPage = () => {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setProducts(prev => prev.map(p => 
+    try {
+      const token = localStorage.getItem('jwtToken');
+      await saveProductPrice(token, id, newPrice);
+
+      setProducts(prev => prev.map(p =>
         p.id === id ? { ...p, price: newPrice } : p
       ));
-      setToast({ message: 'Precio actualizado correctamente', type: 'success' });
+      setToast({ message: 'Precio guardado correctamente', type: 'success' });
+    } catch (err) {
+      setToast({ message: 'Error al guardar el precio', type: 'error' });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
+
 
   return (
     <div className={styles.pageContainer}>
