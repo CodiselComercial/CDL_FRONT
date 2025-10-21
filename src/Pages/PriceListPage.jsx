@@ -1,22 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import SearchBar from '../Components/molecules/SearchBar/SearchBar.jsx';
 import Pagination from '../Components/molecules/Pagination/Pagination.jsx';
 import ProductTable from '../Components/organisms/ProductTable/ProductTable.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './PriceListPage.module.css';
+import { getProductList } from '../services/api.js'; 
 
 const PriceListPage = () => {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Cemento Portland', unit: 'Saco 50kg', price: 185.50, active: true },
-    { id: 2, name: 'Varilla 3/8"', unit: 'Pieza 6m', price: 95.00, active: true },
-    { id: 3, name: 'Arena de río', unit: 'M³', price: 350.00, active: true },
-    { id: 4, name: 'Grava', unit: 'M³', price: 380.00, active: true },
-    { id: 5, name: 'Ladrillo rojo', unit: 'Millar', price: 4500.00, active: true },
-    { id: 6, name: 'Block hueco', unit: 'Pieza', price: 12.50, active: true },
-    { id: 7, name: 'Cal hidratada', unit: 'Saco 20kg', price: 85.00, active: true },
-    { id: 8, name: 'Alambrón', unit: 'Kg', price: 22.00, active: true },
-  ]);
-
+    const [products, setProducts] = useState([]);
   const [editedPrices, setEditedPrices] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showFeatured, setShowFeatured] = useState(false);
@@ -24,6 +15,32 @@ const PriceListPage = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const data = await getProductList(token, currentPage);
+
+        const mapped = data.map(p => ({
+          id: p.id,
+          name: p.nombre,
+          unit: p.unidad,
+          price: editedPrices[p.id] || 0, 
+          active: true,
+        }));
+
+        setProducts(mapped);
+      } catch (err) {
+        setToast({ message: 'Error al cargar productos', type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [currentPage]);
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
