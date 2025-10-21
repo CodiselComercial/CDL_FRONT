@@ -39,3 +39,19 @@ export const getUserData = async (token) => {
     throw error;
   }
 };
+
+
+export const getProductList = async (token, page = 1) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/list/productos?page=${page}`, {
+      headers: {
+        'X-Authorization': token,
+      },
+    });
+
+    return response.data.productos;
+  } catch (error) {
+    console.error('Error al obtener productos:', error);
+    throw error;
+  }
+};

@@ -44,7 +44,7 @@ const LoginForm = ({ onLogin }) => {
       // Obtener datos del usuario
       const userData = await getUserData(token);
       console.log('Datos del usuario:', userData);
-      const userRole = userData.perfil === -2 ? 'proveedor' : 'compras';
+      const userRole = userData.perfil === 1 ? 'proveedor' : 'compras';
 
       // Navegar y pasar el rol al padre si aplica
       onLogin?.(userRole);
