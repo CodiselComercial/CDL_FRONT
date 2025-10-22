@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Plus } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import AddButton from '../Components/atoms/AddButton/AddButton.jsx';
@@ -6,40 +6,35 @@ import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProductForm from '../Components/molecules/ProductForm/ProductForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProductCrudPage.module.css';
+import { addProduct, getProductList, editProduct, deleteProduct } from '../services/api.js';
+
 
 const ProductCrudPage = () => {
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Cemento Portland',
-      unit: 'Saco 50kg',
-      image: null
-    },
-    {
-      id: 2,
-      name: 'Varilla 3/8"',
-      unit: 'Pieza 6m',
-      image: null
-    },
-    {
-      id: 3,
-      name: 'Arena de río',
-      unit: 'M³',
-      image: null
-    },
-    {
-      id: 4,
-      name: 'Grava',
-      unit: 'M³',
-      image: null
-    },
-    {
-      id: 5,
-      name: 'Ladrillo rojo',
-      unit: 'Millar',
-      image: null
-    }
-  ]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const data = await getProductList(token);
+
+        const mapped = data.map(p => ({
+          id: p.id,
+          name: p.nombre,
+          unit: p.unidad,
+          image: null, // si luego tienes imágenes, las puedes mapear aquí
+        }));
+
+        setProducts(mapped);
+      } catch (err) {
+        console.error('Error al cargar productos:', err);
+        setToast({ message: 'Error al cargar productos', type: 'error' });
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -55,31 +50,67 @@ const ProductCrudPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteProduct = (productId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      setProducts(prev => prev.filter(p => p.id !== productId));
-      setToast({ message: 'Producto eliminado correctamente', type: 'success' });
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm('¿Estás segura de que quieres eliminar este producto?')) {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        await deleteProduct(token, productId);
+
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        setToast({ message: 'Producto eliminado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al eliminar producto', type: 'error' });
+      }
     }
   };
 
-  const handleSaveProduct = (formData) => {
+
+
+
+  const handleSaveProduct = async (formData) => {
+    const token = localStorage.getItem('jwtToken');
+
     if (editingProduct) {
-      // Editar producto existente
-      setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id 
-          ? { ...p, ...formData }
-          : p
-      ));
-      setToast({ message: 'Producto actualizado correctamente', type: 'success' });
+      // Editar producto en el backend
+      try {
+        const payload = {
+          codigo: formData.codigo || editingProduct.codigo || `PROD-${editingProduct.id}`,
+          nombre: formData.name,
+          unidad: formData.unit,
+        };
+
+        await editProduct(token, editingProduct.id, payload);
+
+        setProducts(prev => prev.map(p =>
+          p.id === editingProduct.id ? { ...p, ...formData } : p
+        ));
+        setToast({ message: 'Producto actualizado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al actualizar producto', type: 'error' });
+      }
     } else {
       // Crear nuevo producto
-      const newProduct = {
-        id: Date.now(), // ID temporal
-        ...formData
-      };
-      setProducts(prev => [...prev, newProduct]);
-      setToast({ message: 'Producto creado correctamente', type: 'success' });
+      try {
+        const payload = {
+          codigo: formData.codigo || `PROD-${Date.now()}`,
+          nombre: formData.name,
+          unidad: formData.unit,
+        };
+
+        await addProduct(token, payload);
+
+        const newProduct = {
+          id: Date.now(),
+          ...formData,
+        };
+
+        setProducts(prev => [...prev, newProduct]);
+        setToast({ message: 'Producto creado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al crear producto', type: 'error' });
+      }
     }
+
     setIsModalOpen(false);
     setEditingProduct(null);
   };
@@ -120,8 +151,8 @@ const ProductCrudPage = () => {
               <div key={product.id} className={styles.productRow}>
                 <div className={styles.imageCell}>
                   {product.image ? (
-                    <img 
-                      src={product.image} 
+                    <img
+                      src={product.image}
                       alt={product.name}
                       className={styles.productImage}
                     />

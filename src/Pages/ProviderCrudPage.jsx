@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2 } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import AddButton from '../Components/atoms/AddButton/AddButton.jsx';
@@ -6,34 +6,37 @@ import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProviderForm from '../Components/molecules/ProviderForm/ProviderForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProviderCrudPage.module.css';
+import { getProviderList, addProvider, editProvider, deleteProvider } from '../services/api.js';
 
 const ProviderCrudPage = () => {
-  const [providers, setProviders] = useState([
-    {
-      id: 1,
-      company: 'Constructora ABC S.A. de C.V.',
-      representative: 'Juan Pérez',
-      email: 'juan@constructoraabc.com',
-      phone: '+52 55 1234 5678',
-      address: 'Av. Reforma 123, Col. Centro, CDMX'
-    },
-    {
-      id: 2,
-      company: 'Materiales XYZ',
-      representative: 'María García',
-      email: 'maria@materialesxyz.com',
-      phone: '+52 55 9876 5432',
-      address: 'Calle Principal 456, Col. Norte, CDMX'
-    },
-    {
-      id: 3,
-      company: 'Aceros del Norte',
-      representative: 'Carlos López',
-      email: 'carlos@acerosnorte.com',
-      phone: '+52 55 5555 1234',
-      address: 'Blvd. Industrial 789, Zona Industrial, CDMX'
-    }
-  ]);
+
+  const [providers, setProviders] = useState([]);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const data = await getProviderList(token, 1, 0); // puedes ajustar paginación
+
+        const mapped = data.map(p => ({
+          id: p.id,
+          company: p.empresa || p.nombre || 'Proveedor sin nombre',
+          representative: p.representante || '',
+          email: p.email || '',
+          phone: p.telefono || '',
+          address: p.direccion || '',
+        }));
+
+        setProviders(mapped);
+      } catch (err) {
+        console.error('Error al cargar proveedores:', err);
+        setToast({ message: 'Error al cargar proveedores', type: 'error' });
+      }
+    };
+
+    fetchProviders();
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState(null);
@@ -49,34 +52,69 @@ const ProviderCrudPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteProvider = (providerId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este proveedor?')) {
-      setProviders(prev => prev.filter(p => p.id !== providerId));
-      setToast({ message: 'Proveedor eliminado correctamente', type: 'success' });
+  const handleDeleteProvider = async (providerId) => {
+    if (window.confirm('¿Estás segura de que quieres eliminar este proveedor?')) {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        await deleteProvider(token, providerId);
+
+        setProviders(prev => prev.filter(p => p.id !== providerId));
+        setToast({ message: 'Proveedor eliminado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al eliminar proveedor', type: 'error' });
+      }
     }
   };
 
-  const handleSaveProvider = (formData) => {
+
+  const handleSaveProvider = async (formData) => {
+    const token = localStorage.getItem('jwtToken');
+
     if (editingProvider) {
-      // Editar proveedor existente
-      setProviders(prev => prev.map(p => 
-        p.id === editingProvider.id 
-          ? { ...p, ...formData }
-          : p
-      ));
-      setToast({ message: 'Proveedor actualizado correctamente', type: 'success' });
+      // Editar proveedor en el backend
+      try {
+        const payload = {
+          id: editingProvider.id,
+          codigo: formData.codigo || editingProvider.codigo || `PROV-${editingProvider.id}`,
+          nombre: formData.company || formData.nombre || editingProvider.company,
+        };
+
+        await editProvider(token, editingProvider.id, payload);
+
+        setProviders(prev => prev.map(p =>
+          p.id === editingProvider.id ? { ...p, ...formData } : p
+        ));
+        setToast({ message: 'Proveedor actualizado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al actualizar proveedor', type: 'error' });
+      }
     } else {
-      // Crear nuevo proveedor
-      const newProvider = {
-        id: Date.now(), // ID temporal
-        ...formData
-      };
-      setProviders(prev => [...prev, newProvider]);
-      setToast({ message: 'Proveedor creado correctamente', type: 'success' });
+      // Crear nuevo proveedor en el backend
+      try {
+        const payload = {
+          codigo: formData.codigo || `PROV-${Date.now()}`,
+          nombre: formData.company || formData.nombre || 'Proveedor sin nombre',
+        };
+
+        await addProvider(token, payload);
+
+        const newProvider = {
+          id: Date.now(), // temporal para frontend
+          ...formData,
+        };
+
+        setProviders(prev => [...prev, newProvider]);
+        setToast({ message: 'Proveedor creado correctamente', type: 'success' });
+      } catch (err) {
+        setToast({ message: 'Error al crear proveedor', type: 'error' });
+      }
     }
+
     setIsModalOpen(false);
     setEditingProvider(null);
   };
+
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
