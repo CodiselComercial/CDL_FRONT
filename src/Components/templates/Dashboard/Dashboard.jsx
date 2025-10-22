@@ -8,6 +8,8 @@ import ProductCrudPage from '../../../Pages/ProductCrudPage.jsx';
 import ProviderCrudPage from '../../../Pages/ProviderCrudPage.jsx';
 import UserCrudPage from '../../../Pages/UserCrudPage.jsx';
 import styles from './Dashboard.module.css';
+import { logout } from '../../../services/api.js';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = ({ userRole = 'proveedor', onLogout }) => {
   const [currentPage, setCurrentPage] = useState(
@@ -18,10 +20,16 @@ const Dashboard = ({ userRole = 'proveedor', onLogout }) => {
     setCurrentPage(page);
   };
 
-  const handleLogout = () => {
-    console.log('Logout clicked');
-    onLogout(); // Llama a la función onLogout del padre
-  };
+const navigate = useNavigate();
+
+const handleLogout = async () => {
+  console.log('Logout clicked');
+  const token = localStorage.getItem('jwtToken');
+  await logout(token); // limpia el token y llama al backend si aplica
+  onLogout(); // actualiza el estado en App.jsx
+  navigate('/'); // redirige al login
+};
+
 
   const renderCurrentPage = () => {
     switch (currentPage) {

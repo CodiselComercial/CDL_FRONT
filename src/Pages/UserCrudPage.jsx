@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import AddButton from '../Components/atoms/AddButton/AddButton.jsx';
@@ -6,31 +6,35 @@ import Modal from '../Components/atoms/Modal/Modal.jsx';
 import UserForm from '../Components/molecules/UserForm/UserForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './UserCrudPage.module.css';
+import { getUserList, addUser, editUser, deleteUser    } from '../services/api.js';
 
 const UserCrudPage = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      username: 'juan.proveedor',
-      fullName: 'Juan Pérez',
-      email: 'juan@constructoraabc.com',
-      role: 'proveedor'
-    },
-    {
-      id: 2,
-      username: 'maria.compras',
-      fullName: 'María García',
-      email: 'maria@empresa.com',
-      role: 'compras'
-    },
-    {
-      id: 3,
-      username: 'carlos.admin',
-      fullName: 'Carlos López',
-      email: 'carlos@empresa.com',
-      role: 'compras'
+
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const data = await getUserList(token, 1, 0);
+
+      const mapped = data.map(u => ({
+        id: u.id,
+        username: u.nombre,
+        fullName: u.nombre, 
+        email: `usuario${u.id}@sistema.com`, 
+        role: u.perfil === -1 ? 'admin' : 'proveedor',
+      }));
+
+      setUsers(mapped);
+    } catch (err) {
+      console.error('Error al cargar usuarios:', err);
+      setToast({ message: 'Error al cargar usuarios', type: 'error' });
     }
-  ]);
+  };
+
+  fetchUsers();
+}, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -46,37 +50,77 @@ const UserCrudPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = (userId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+ const handleDeleteUser = async (userId) => {
+  if (window.confirm('¿Estás segura de que quieres eliminar este usuario?')) {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      await deleteUser(token, userId);
+
       setUsers(prev => prev.filter(u => u.id !== userId));
       setToast({ message: 'Usuario eliminado correctamente', type: 'success' });
+    } catch (err) {
+      setToast({ message: 'Error al eliminar usuario', type: 'error' });
     }
-  };
+  }
+};
 
-  const handleSaveUser = (formData) => {
-    if (editingUser) {
-      // Editar usuario existente
-      const updatedUser = { ...editingUser, ...formData };
-      // Si no se proporcionó nueva contraseña, mantener la actual
-      if (!formData.password) {
-        delete updatedUser.password;
-      }
-      setUsers(prev => prev.map(u => 
+
+const handleSaveUser = async (formData) => {
+  const token = localStorage.getItem('jwtToken');
+
+  if (editingUser) {
+    // Editar usuario en el backend
+    try {
+      const payload = {
+        username: formData.username,
+        password: formData.password || editingUser.password,
+        role: formData.role,
+        proveedor_id: formData.proveedor_id || null,
+      };
+
+      await editUser(token, editingUser.id, payload);
+
+      const updatedUser = {
+        ...editingUser,
+        ...formData,
+      };
+
+      setUsers(prev => prev.map(u =>
         u.id === editingUser.id ? updatedUser : u
       ));
       setToast({ message: 'Usuario actualizado correctamente', type: 'success' });
-    } else {
-      // Crear nuevo usuario
-      const newUser = {
-        id: Date.now(), // ID temporal
-        ...formData
+    } catch (err) {
+      setToast({ message: 'Error al actualizar usuario', type: 'error' });
+    }
+  } else {
+    // Crear nuevo usuario en el backend
+    try {
+      const payload = {
+        username: formData.username,
+        password: formData.password,
+        role: formData.role,
+        proveedor_id: formData.proveedor_id || null,
       };
+
+      await addUser(token, payload);
+
+      const newUser = {
+        id: Date.now(), // temporal para frontend
+        ...formData,
+      };
+
       setUsers(prev => [...prev, newUser]);
       setToast({ message: 'Usuario creado correctamente', type: 'success' });
+    } catch (err) {
+      setToast({ message: 'Error al crear usuario', type: 'error' });
     }
-    setIsModalOpen(false);
-    setEditingUser(null);
-  };
+  }
+
+  setIsModalOpen(false);
+  setEditingUser(null);
+};
+
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
