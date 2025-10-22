@@ -347,5 +347,27 @@ export const deleteUser = async (token, userId) => {
 };
 
 
+//get productos con sus proveedores xd
+
+export const getProductWithProviders = async (token) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/compras/productos`,
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener productos con proveedores:', error);
+    throw error;
+  }
+};
+
+
+
 
 
