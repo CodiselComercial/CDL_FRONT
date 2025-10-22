@@ -63,14 +63,14 @@ export const getProductList = async (token, page = 1) => {
 };
 
 
-export const saveProductPrice = async (token, productoId, precio) => {
+export const saveProductPrice = async (token, productoId, precio, fechaVigencia) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/precios/agregar`,
       {
         producto: productoId,
         precio: precio,
-        fecha_vigencia: "2025-12-31", 
+        fecha_vigencia: fechaVigencia, // ahora es dinámica
       },
       {
         headers: {
@@ -85,6 +85,7 @@ export const saveProductPrice = async (token, productoId, precio) => {
     throw error;
   }
 };
+
 
 // AGREGAR PRODUCTOS SUPER 
 export const addProduct = async (token, productData) => {
