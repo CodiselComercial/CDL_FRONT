@@ -70,7 +70,7 @@ export const saveProductPrice = async (token, productoId, precio, fechaVigencia)
       {
         producto: productoId,
         precio: precio,
-        fecha_vigencia: fechaVigencia, // ahora es dinámica
+        fecha_vigencia: fechaVigencia, 
       },
       {
         headers: {
@@ -90,16 +90,22 @@ export const saveProductPrice = async (token, productoId, precio, fechaVigencia)
 // AGREGAR PRODUCTOS SUPER 
 export const addProduct = async (token, productData) => {
   try {
+    const formData = new FormData();
+    formData.append('codigo', productData.codigo);
+    formData.append('nombre', productData.nombre);
+    formData.append('unidad', productData.unidad);
+
+    // Solo si hay imagen
+    if (productData.foto) {
+      formData.append('foto', productData.foto);
+    }
+
     const response = await axios.post(
-      `${API_BASE_URL}/add/productos`,
-      {
-        codigo: productData.codigo,
-        nombre: productData.nombre,
-        unidad: productData.unidad,
-      },
+      `${API_BASE_URL}/productos/agregar`,
+      formData,
       {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
           'X-Authorization': token,
         },
       }
@@ -111,19 +117,29 @@ export const addProduct = async (token, productData) => {
     throw error;
   }
 };
+
+
+
+
 // EDITAR PRODUCTOS SUPER ADMIN
 export const editProduct = async (token, productoId, productData) => {
   try {
+    const formData = new FormData();
+    formData.append('codigo', productData.codigo);
+    formData.append('nombre', productData.nombre);
+    formData.append('unidad', productData.unidad);
+
+    // Solo si hay imagen nueva
+    if (productData.foto) {
+      formData.append('foto', productData.foto);
+    }
+
     const response = await axios.post(
-      `${API_BASE_URL}/edit/productos/${productoId}`,
-      {
-        codigo: productData.codigo,
-        nombre: productData.nombre,
-        unidad: productData.unidad,
-      },
+      `${API_BASE_URL}/productos/editar/${productoId}`,
+      formData,
       {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
           'X-Authorization': token,
         },
       }
@@ -135,6 +151,7 @@ export const editProduct = async (token, productoId, productData) => {
     throw error;
   }
 };
+
 
 
 // DELETE DE SUPER PRODUCTOS
