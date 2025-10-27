@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, Import } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import AddButton from '../Components/atoms/AddButton/AddButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProviderForm from '../Components/molecules/ProviderForm/ProviderForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProviderCrudPage.module.css';
-import { getProviderList, addProvider, editProvider, deleteProvider } from '../services/api.js';
+import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
+import { getProviderList, addProvider, editProvider, deleteProvider, syncProviders  } from '../services/api.js';
 
 const ProviderCrudPage = () => {
 
   const [providers, setProviders] = useState([]);
+
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -115,6 +121,23 @@ const ProviderCrudPage = () => {
   };
 
 
+  const handleSyncProviders = async () => {
+  setIsSyncing(true); 
+
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const result = await syncProviders(token);
+    setSyncResult(result);
+    setSyncModalOpen(true); 
+  } catch (err) {
+    setToast({ message: 'Error al sincronizar proveedores', type: 'error' });
+  } finally {
+    setIsSyncing(false); 
+  }
+};
+
+
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -138,6 +161,12 @@ const ProviderCrudPage = () => {
           <AddButton onClick={handleAddProvider}>
             Agregar Proveedor
           </AddButton>
+
+
+          <SyncButton onClick={handleSyncProviders}>
+            Sincronizar Proveedores
+          </SyncButton>
+
         </div>
 
         <div className={styles.providersTable}>
@@ -201,6 +230,34 @@ const ProviderCrudPage = () => {
             isEditing={!!editingProvider}
           />
         </Modal>
+
+        <Modal
+  isOpen={isSyncing}
+  onClose={() => {}}
+  title="Sincronizando proveedores..."
+  size="small"
+>
+  <div style={{ padding: '1rem', textAlign: 'center' }}>
+    <p>Estamos sincronizando los proveedores con el sistema...</p>
+    <div className={styles.spinner} />
+  </div>
+</Modal>
+
+  <Modal
+    isOpen={syncModalOpen}
+    onClose={() => setSyncModalOpen(false)}
+    title="Resultado de sincronización"
+    size="large"
+  >
+    {syncResult ? (
+      <div className={styles.syncResult}>
+        <pre>{JSON.stringify(syncResult, null, 2)}</pre>
+      </div>
+    ) : (
+      <p>No se recibió respuesta del servidor.</p>
+    )}
+  </Modal>
+
 
         {toast && (
           <Toast
