@@ -392,5 +392,47 @@ export const getProductWithProviders = async (token) => {
 
 
 
+//Get cotizaciones del super
+export const getCotizaciones = async (token, startDate, endDate, userId) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/cotizaciones/${startDate}/${endDate}/${userId}`,
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener cotizaciones:', error);
+    throw error;
+  }
+};
+
+
+export const syncProducts = async (token) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/productos/sync`,
+      {},
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al sincronizar productos:', error);
+    throw error;
+  }
+};
+
+
+
+
 
 

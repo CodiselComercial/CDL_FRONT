@@ -6,11 +6,15 @@ import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProductForm from '../Components/molecules/ProductForm/ProductForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProductCrudPage.module.css';
-import { addProduct, getProductList, editProduct, deleteProduct } from '../services/api.js';
+import { addProduct, getProductList, editProduct, deleteProduct, syncProducts  } from '../services/api.js';
 
 
 const ProductCrudPage = () => {
   const [products, setProducts] = useState([]);
+
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -77,7 +81,7 @@ const ProductCrudPage = () => {
           codigo: formData.codigo || `PROD-${Date.now()}`,
           nombre: formData.name,
           unidad: formData.unit,
-          foto: formData.imageFile, 
+          foto: formData.imageFile,
         };
 
         await editProduct(token, editingProduct.id, payload);
@@ -118,6 +122,19 @@ const ProductCrudPage = () => {
     setEditingProduct(null);
   };
 
+
+  const handleSyncProducts = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const result = await syncProducts(token);
+      setSyncResult(result);
+      setSyncModalOpen(true);
+    } catch (err) {
+      setToast({ message: 'Error al sincronizar productos', type: 'error' });
+    }
+  };
+
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
@@ -140,6 +157,11 @@ const ProductCrudPage = () => {
           <AddButton onClick={handleAddProduct}>
             Agregar Producto
           </AddButton>
+
+          <AddButton onClick={handleSyncProducts}>
+            Sincronizar Productos
+          </AddButton>
+
         </div>
 
         <div className={styles.productsTable}>
@@ -205,6 +227,22 @@ const ProductCrudPage = () => {
             isEditing={!!editingProduct}
           />
         </Modal>
+
+        <Modal
+          isOpen={syncModalOpen}
+          onClose={() => setSyncModalOpen(false)}
+          title="Resultado de sincronización"
+          size="large"
+        >
+          {syncResult ? (
+            <div className={styles.syncResult}>
+              <pre>{JSON.stringify(syncResult, null, 2)}</pre>
+            </div>
+          ) : (
+            <p>No se recibió respuesta del servidor.</p>
+          )}
+        </Modal>
+
 
         {toast && (
           <Toast
