@@ -7,7 +7,7 @@ const ProductForm = ({ product, onSave, onCancel, isEditing = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     unit: '',
-    image: ''
+    imageFile: null, // aquí guardamos el archivo
   });
 
   useEffect(() => {
@@ -15,7 +15,7 @@ const ProductForm = ({ product, onSave, onCancel, isEditing = false }) => {
       setFormData({
         name: product.name || '',
         unit: product.unit || '',
-        image: product.image || ''
+        imageFile: null, // no podemos prellenar un archivo
       });
     }
   }, [product]);
@@ -24,7 +24,15 @@ const ProductForm = ({ product, onSave, onCancel, isEditing = false }) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setFormData(prev => ({
+      ...prev,
+      imageFile: file,
     }));
   };
 
@@ -42,9 +50,11 @@ const ProductForm = ({ product, onSave, onCancel, isEditing = false }) => {
         <Input
           type="text"
           name="name"
+          id="name"
           value={formData.name}
           onChange={handleInputChange}
           placeholder="Ingresa el nombre del producto"
+          autoComplete="off"
         />
       </div>
 
@@ -55,22 +65,24 @@ const ProductForm = ({ product, onSave, onCancel, isEditing = false }) => {
         <Input
           type="text"
           name="unit"
+          id="unit"
           value={formData.unit}
           onChange={handleInputChange}
           placeholder="Ej: Saco 50kg, M³, Pieza"
+          autoComplete="off"
         />
       </div>
 
       <div className={styles.formGroup}>
         <label htmlFor="image" className={styles.label}>
-          URL de Imagen
+          Imagen del Producto
         </label>
-        <Input
-          type="url"
+        <input
+          type="file"
           name="image"
-          value={formData.image}
-          onChange={handleInputChange}
-          placeholder="https://ejemplo.com/imagen.jpg"
+          id="image"
+          accept="image/*"
+          onChange={handleFileChange}
         />
       </div>
 

@@ -74,9 +74,10 @@ const ProductCrudPage = () => {
       // Editar producto en el backend
       try {
         const payload = {
-          codigo: formData.codigo || editingProduct.codigo || `PROD-${editingProduct.id}`,
+          codigo: formData.codigo || `PROD-${Date.now()}`,
           nombre: formData.name,
           unidad: formData.unit,
+          foto: formData.imageFile, 
         };
 
         await editProduct(token, editingProduct.id, payload);
@@ -95,7 +96,9 @@ const ProductCrudPage = () => {
           codigo: formData.codigo || `PROD-${Date.now()}`,
           nombre: formData.name,
           unidad: formData.unit,
+          foto: formData.imageFile, // asegúrate que venga del <input type="file" />
         };
+
 
         await addProduct(token, payload);
 
