@@ -1,69 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { FileText, Calendar } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import styles from './PurchaseOrdersPage.module.css';
+import { getCotizaciones } from '../services/api.js';
+
 
 const PurchaseOrdersPage = () => {
-  const [viewMode, setViewMode] = useState('orders'); // 'orders' | 'invoiceSummary'
-  const [orders] = useState([
-    {
-      id: 1,
-      orderNumber: 'OC-2024-001',
-      date: '2024-01-15',
-      provider: 'Constructora ABC',
-      status: 'pendiente',
-      total: 15750.00,
-      items: [
-        { product: 'Cemento Portland', quantity: 50, unit: 'Saco 50kg', price: 185.50, total: 9275.00 },
-        { product: 'Varilla 3/8"', quantity: 100, unit: 'Pieza 6m', price: 95.00, total: 9500.00 },
-        { product: 'Arena de río', quantity: 5, unit: 'M³', price: 350.00, total: 1750.00 }
-      ]
-    },
-    {
-      id: 2,
-      orderNumber: 'OC-2024-002',
-      date: '2024-01-14',
-      provider: 'Materiales XYZ',
-      status: 'aceptada',
-      total: 8900.00,
-      items: [
-        { product: 'Ladrillo rojo', quantity: 2, unit: 'Millar', price: 4500.00, total: 9000.00 },
-        { product: 'Block hueco', quantity: 200, unit: 'Pieza', price: 12.50, total: 2500.00 }
-      ]
-    },
-    {
-      id: 3,
-      orderNumber: 'OC-2024-003',
-      date: '2024-01-13',
-      provider: 'Aceros del Norte',
-      status: 'rechazada',
-      total: 4750.00,
-      items: [
-        { product: 'Varilla 3/8"', quantity: 50, unit: 'Pieza 6m', price: 95.00, total: 4750.00 }
-      ]
-    }
-  ]);
+const [orders, setOrders] = useState([]);
+const [loading, setLoading] = useState(false);
+const [viewMode, setViewMode] = useState('orders');
 
-  // Datos simulados para resumen de facturas
-  const [invoices] = useState([
-    {
-      id: 'FAC-001', folio: 'A-001', date: '2024-01-16', series: 'A', provider: 'Constructora ABC',
-      subtotal: 14500.0, iva: 2320.0, total: 16820.0,
-      items: [
-        { code: 'CEM-50', name: 'Cemento Portland', unitPrice: 185.5, quantity: 50, amount: 9275.0 },
-        { code: 'VAR-38', name: 'Varilla 3/8"', unitPrice: 95.0, quantity: 50, amount: 4750.0 },
-      ],
-    },
-    {
-      id: 'FAC-002', folio: 'B-014', date: '2024-01-14', series: 'B', provider: 'Materiales XYZ',
-      subtotal: 8000.0, iva: 1280.0, total: 9280.0,
-      items: [
-        { code: 'LAD-ROJ', name: 'Ladrillo rojo', unitPrice: 4500.0, quantity: 1, amount: 4500.0 },
-        { code: 'BLO-HUE', name: 'Block hueco', unitPrice: 12.5, quantity: 280, amount: 3500.0 },
-      ],
-    },
-  ]);
+    
+useEffect(() => {
+  const fetchCotizaciones = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
+
+      const mapped = data.map(cot => ({
+        id: cot.CIDDOCUMENTO,
+        orderNumber: `COT-${cot.CFOLIO}`,
+        date: cot.CFECHA.split('T')[0],
+        provider: cot.CRAZONSOCIAL,
+        status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
+        total: cot.CTOTAL,
+        items: cot.Movimientos.map(mov => ({
+          product: `Producto ${mov.CIDPRODUCTO}`,
+          quantity: mov.CUNIDADES,
+          unit: `Unidad ${mov.CIDUNIDAD}`,
+          price: mov.CPRECIO,
+          total: mov.CTOTAL
+        }))
+      }));
+
+      setOrders(mapped);
+    } catch (err) {
+      console.error('Error al cargar cotizaciones:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCotizaciones();
+}, []);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
