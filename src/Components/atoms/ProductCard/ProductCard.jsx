@@ -9,7 +9,12 @@ const ProductCard = ({ product, onSelect, selected = false }) => {
     >
       <div className={styles.imageContainer}>
         {product.image ? (
-          <img src={product.image} alt={product.name} className={styles.productImage} />
+         <img
+            src={`https://arxsoftware.cloud/pedidoscodisel/files/${product.image}`}
+            alt={product.name}
+            className={styles.productImage}
+          />
+
         ) : (
           <div className={styles.placeholderImage}>
             <span className={styles.placeholderText}>Sin imagen</span>

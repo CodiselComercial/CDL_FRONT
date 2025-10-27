@@ -62,15 +62,19 @@ export const getProductList = async (token, page = 1) => {
   }
 };
 
-
+// GUARDAR PRECIO PROVEEDOR
 export const saveProductPrice = async (token, productoId, precio, fechaVigencia) => {
+  if (!token || !productoId || !precio || !fechaVigencia) {
+    throw new Error('Faltan datos para guardar el precio');
+  }
+
   try {
     const response = await axios.post(
       `${API_BASE_URL}/precios/agregar`,
       {
         producto: productoId,
-        precio: precio,
-        fecha_vigencia: fechaVigencia, 
+        precio: parseFloat(precio),
+        fecha_vigencia: fechaVigencia,
       },
       {
         headers: {
@@ -85,6 +89,7 @@ export const saveProductPrice = async (token, productoId, precio, fechaVigencia)
     throw error;
   }
 };
+
 
 
 // AGREGAR PRODUCTOS SUPER 
