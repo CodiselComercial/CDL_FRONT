@@ -3,7 +3,12 @@ import TableInput from '../../atoms/TableInput/TableInput.jsx';
 import SaveButton from '../../atoms/SaveButton/SaveButton.jsx';
 import styles from './ProductTable.module.css';
 
+
+
 const ProductTable = ({ products, editedPrices, onPriceChange, onSave, loading }) => {
+
+  console.log('Productos recibidos en tabla:', products);
+
   return (
     <div className={styles.tableContainer}>
       <table className={styles.table}>
@@ -21,7 +26,12 @@ const ProductTable = ({ products, editedPrices, onPriceChange, onSave, loading }
             <tr key={product.id} className={styles.tableRow}>
               <td className={styles.dataCell}>{product.name}</td>
               <td className={styles.dataCell}>{product.unit}</td>
-              <td className={styles.priceCell}>${product.price.toFixed(2)}</td>
+             <td className={styles.priceCell}>
+                {typeof product.price === 'number' && !isNaN(product.price)
+                  ? `$${product.price.toFixed(2)}`
+                  : '—'}
+              </td>
+
               <td className={styles.inputCell}>
                 <TableInput
                   type="number"

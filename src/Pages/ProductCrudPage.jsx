@@ -6,6 +6,7 @@ import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProductForm from '../Components/molecules/ProductForm/ProductForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProductCrudPage.module.css';
+import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
 import { addProduct, getProductList, editProduct, deleteProduct, syncProducts  } from '../services/api.js';
 
 
@@ -14,6 +15,8 @@ const ProductCrudPage = () => {
 
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
 
 
   useEffect(() => {
@@ -123,16 +126,21 @@ const ProductCrudPage = () => {
   };
 
 
-  const handleSyncProducts = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const result = await syncProducts(token);
-      setSyncResult(result);
-      setSyncModalOpen(true);
-    } catch (err) {
-      setToast({ message: 'Error al sincronizar productos', type: 'error' });
-    }
-  };
+const handleSyncProducts = async () => {
+  setIsSyncing(true); 
+
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const result = await syncProducts(token);
+    setSyncResult(result);
+    setSyncModalOpen(true); 
+  } catch (err) {
+    setToast({ message: 'Error al sincronizar productos', type: 'error' });
+  } finally {
+    setIsSyncing(false); 
+  }
+};
+
 
 
   const handleCloseModal = () => {
@@ -158,9 +166,9 @@ const ProductCrudPage = () => {
             Agregar Producto
           </AddButton>
 
-          <AddButton onClick={handleSyncProducts}>
+          <SyncButton  onClick={handleSyncProducts}>
             Sincronizar Productos
-          </AddButton>
+          </SyncButton >
 
         </div>
 
@@ -227,6 +235,19 @@ const ProductCrudPage = () => {
             isEditing={!!editingProduct}
           />
         </Modal>
+
+        <Modal
+          isOpen={isSyncing}
+          onClose={() => {}}
+          title="Sincronizando productos..."
+          size="small"
+        >
+          <div style={{ padding: '1rem', textAlign: 'center' }}>
+            <p>Estamos sincronizando los productos con el sistema...</p>
+            <div className={styles.spinner} />
+          </div>
+        </Modal>
+
 
         <Modal
           isOpen={syncModalOpen}
