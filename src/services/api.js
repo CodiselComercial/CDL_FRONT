@@ -451,6 +451,42 @@ export const syncProviders = async (token) => {
 };
 
 
+export const getLastProductPrice = async (token, productId) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/precios/ultimo/${productId}`,
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error al obtener precio para producto ${productId}:`, error);
+    return null;
+  }
+};
+
+
+export const getProviderProductPrices = async (token) => {
+  try {
+    const response = await axios.get(
+       `${API_BASE_URL}/proveedor/productos/precios`,
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+    return response.data; 
+  } catch (error) {
+    console.error('Error al obtener precios del proveedor:', error);
+    return [];
+  }
+};
+
+
 
 
 

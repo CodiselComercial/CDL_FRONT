@@ -7,104 +7,117 @@ import Pagination from '../Components/molecules/Pagination/Pagination.jsx';
 import ProductTable from '../Components/organisms/ProductTable/ProductTable.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './PriceListPage.module.css';
-import { getProductList, saveProductPrice } from '../services/api.js';
+import { getProductList, saveProductPrice, getLastProductPrice, getProviderProductPrices } from '../services/api.js';
 
 const PriceListPage = () => {
-  const [products, setProducts] = useState([]);
-  const [editedPrices, setEditedPrices] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFeatured, setShowFeatured] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+const [products, setProducts] = useState([]);
+const [editedPrices, setEditedPrices] = useState({});
+const [searchTerm, setSearchTerm] = useState('');
+const [showFeatured, setShowFeatured] = useState(false);
+const [toast, setToast] = useState(null);
+const [loading, setLoading] = useState(false);
+const [currentPage, setCurrentPage] = useState(1);
+const [selectedProductId, setSelectedProductId] = useState(null);
+const [selectedDate, setSelectedDate] = useState(new Date());
+const [isDateModalOpen, setIsDateModalOpen] = useState(false);
 
-  const itemsPerPage = 5;
+const itemsPerPage = 5;
 
-useEffect(() => {
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const data = await getProductList(token, currentPage);
+const fetchProducts = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const productData = await getProviderProductPrices(token);
 
-      console.log('Respuesta del backend:', data); // 👀
+    const mapped = productData.map(p => {
+      const precio = p.precio?.precio ? parseFloat(p.precio.precio) : 0;
 
-      const mapped = data.map(p => ({
+      return {
         id: p.id,
         name: p.nombre,
         unit: p.unidad,
-        price: typeof p.precio === 'number' && !isNaN(p.precio) ? p.precio : 0,
+        price: typeof precio === 'number' && !isNaN(precio) ? precio : 0,
         active: true,
-      }));
+      };
+    });
 
-      setProducts(mapped);
-    } catch (err) {
-      setToast({ message: 'Error al cargar productos', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
+    setProducts(mapped);
+  } catch (err) {
+    setToast({ message: 'Error al cargar productos', type: 'error' });
+  } finally {
+    setLoading(false);
+  }
+};
 
+useEffect(() => {
   fetchProducts();
 }, [currentPage]);
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFeatured = !showFeatured || editedPrices[p.id];
-    return matchesSearch && matchesFeatured && p.active;
-  });
+const filteredProducts = products.filter(p => {
+  const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesFeatured = !showFeatured || editedPrices[p.id];
+  return matchesSearch && matchesFeatured && p.active;
+});
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+const paginatedProducts = filteredProducts.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
-  const handlePriceChange = (id, value) => {
-    const parsed = parseFloat(value);
-    setEditedPrices(prev => ({
-      ...prev,
-      [id]: !isNaN(parsed) ? parsed : ''
-    }));
-  };
+const handlePriceChange = (id, value) => {
+  const parsed = parseFloat(value);
+  setEditedPrices(prev => ({
+    ...prev,
+    [id]: !isNaN(parsed) ? parsed : ''
+  }));
+};
 
-  const handleSave = (id) => {
-    const newPrice = parseFloat(editedPrices[id]);
-    if (!newPrice || newPrice <= 0) {
-      setToast({ message: 'El precio debe ser mayor a cero', type: 'error' });
-      return;
-    }
+const handleSave = (id) => {
+  const newPrice = parseFloat(editedPrices[id]);
+  if (!newPrice || newPrice <= 0) {
+    setToast({ message: 'El precio debe ser mayor a cero', type: 'error' });
+    return;
+  }
 
-    setSelectedProductId(id);
-    setSelectedDate(new Date());
-    setIsDateModalOpen(true);
-  };
+  setSelectedProductId(id);
+  setSelectedDate(new Date());
+  setIsDateModalOpen(true);
+};
 
-  const handleConfirmDate = async () => {
-    const id = selectedProductId;
-    const newPrice = parseFloat(editedPrices[id]);
-    const fecha = selectedDate.toISOString().split('T')[0];
+const handleConfirmDate = async () => {
+  const id = selectedProductId;
+  const newPrice = parseFloat(editedPrices[id]);
+  const fecha = selectedDate.toISOString().split('T')[0];
 
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('jwtToken');
-      await saveProductPrice(token, id, newPrice, fecha);
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('jwtToken');
+    await saveProductPrice(token, id, newPrice, fecha);
 
-      setProducts(prev => prev.map(p =>
-        p.id === id ? { ...p, price: newPrice } : p
-      ));
-      setToast({ message: 'Precio guardado correctamente', type: 'success' });
-    } catch (err) {
-      setToast({ message: 'Error al guardar el precio', type: 'error' });
-    } finally {
-      setLoading(false);
-      setIsDateModalOpen(false);
-      setSelectedProductId(null);
-    }
-  };
+    const updatedProducts = await getProviderProductPrices(token);
+    const updatedProduct = updatedProducts.find(p => p.id === id);
+    const updatedPrice = updatedProduct?.precio?.precio
+      ? parseFloat(updatedProduct.precio.precio)
+      : newPrice;
+
+    setProducts(prev =>
+      prev.map(p =>
+        p.id === id ? { ...p, price: updatedPrice } : p
+      )
+    );
+
+    setToast({ message: 'Precio guardado correctamente', type: 'success' });
+  } catch (err) {
+    setToast({ message: 'Error al guardar el precio', type: 'error' });
+  } finally {
+    setLoading(false);
+    setIsDateModalOpen(false);
+    setSelectedProductId(null);
+  }
+};
+
+
   
   return (
   <div className={styles.pageContainer}>
