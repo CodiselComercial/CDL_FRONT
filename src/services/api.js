@@ -488,6 +488,29 @@ export const getProviderProductPrices = async (token) => {
 
 
 
+export const analizarCotizacion = async (token, cotizacionId) => {
+  console.log(token)
+  try {
+    const response = await axios.post(
+       `${API_BASE_URL}/cotizaciones/analizar/${cotizacionId}`,
+      null,
+      {
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error al analizar cotización ${cotizacionId}:`, error);
+    throw error;
+  }
+};
+
+
+
+
+
 
 
 

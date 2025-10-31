@@ -1,59 +1,66 @@
-import React, { useState, useEffect  } from 'react';
-import { FileText, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Calendar, Zap, DollarSign } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import styles from './PurchaseOrdersPage.module.css';
-import { getCotizaciones } from '../services/api.js';
-
+import { getCotizaciones, analizarCotizacion } from '../services/api.js';
 
 const PurchaseOrdersPage = () => {
-const [orders, setOrders] = useState([]);
-const [loading, setLoading] = useState(false);
-const [viewMode, setViewMode] = useState('orders');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('orders');
+  const [toast, setToast] = useState(null);
 
-    
-useEffect(() => {
-  const fetchCotizaciones = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
+  const [invoices, setInvoices] = useState([]);
+  const [analisisData, setAnalisisData] = useState(null); 
 
-      const mapped = data.map(cot => ({
-        id: cot.CIDDOCUMENTO,
-        orderNumber: `COT-${cot.CFOLIO}`,
-        date: cot.CFECHA.split('T')[0],
-        provider: cot.CRAZONSOCIAL,
-        status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
-        total: cot.CTOTAL,
-        items: cot.Movimientos.map(mov => ({
-          product: `Producto ${mov.CIDPRODUCTO}`,
-          quantity: mov.CUNIDADES,
-          unit: `Unidad ${mov.CIDUNIDAD}`,
-          price: mov.CPRECIO,
-          total: mov.CTOTAL
-        }))
-      }));
+  useEffect(() => {
+    const fetchCotizaciones = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          throw new Error('No se encontró token de autenticación');
+        }
+        const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
 
-      setOrders(mapped);
-    } catch (err) {
-      console.error('Error al cargar cotizaciones:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const mapped = data.map(cot => ({
+          id: cot.CIDDOCUMENTO,
+          orderNumber: `COT-${cot.CFOLIO}`,
+          date: cot.CFECHA.split('T')[0],
+          provider: cot.CRAZONSOCIAL,
+          status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
+          total: cot.CTOTAL,
+          items: cot.Movimientos.map(mov => ({
+            product: `Producto ${mov.CIDPRODUCTO}`,
+            quantity: mov.CUNIDADES,
+            unit: `Unidad ${mov.CIDUNIDAD}`,
+            price: mov.CPRECIO,
+            total: mov.CTOTAL
+          }))
+        }));
 
-  fetchCotizaciones();
-}, []);
+        setOrders(mapped);
+      } catch (err) {
+        console.error('Error al cargar cotizaciones:', err);
+        setToast({ message: err.message || 'Error al cargar cotizaciones', type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCotizaciones();
+  }, []);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredOrders = orders; // sin filtro de estado
+  const filteredOrders = orders; 
   const [providerFilter, setProviderFilter] = useState(null);
 
   const handleViewOrder = (order) => {
+    setAnalisisData(null);
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
@@ -67,6 +74,7 @@ useEffect(() => {
     setIsModalOpen(false);
     setSelectedOrder(null);
     setSelectedInvoice(null);
+    setAnalisisData(null);
   };
 
   const getStatusBadge = (status) => {
@@ -77,6 +85,86 @@ useEffect(() => {
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
+
+  const handleCalcularCotizacion = async (cotizacionId) => {
+    setLoading(true);
+
+    let token = localStorage.getItem('jwtToken');
+    
+    if (!token) {
+      console.error('Error: No se encontró token (jwtToken) en localStorage.');
+      setToast({ message: 'Error de autenticación: No se encontró token', type: 'error' });
+      setLoading(false);
+      return; 
+    }
+    
+    // LIMPIEZA DEL TOKEN
+    token = token.replace(/JWT: /g, '').replace(/"/g, '').trim(); 
+    console.log('Token DESPUÉS de la limpieza:', token);
+
+    try {
+      const result = await analizarCotizacion(token, cotizacionId);
+
+      const productos = Object.values(result)
+        .flatMap(prov => prov.productos.map(p => ({
+          proveedorNombre: prov.nombre,
+          codigo: p.codigo,
+          nombre: p.nombre,
+          precioMinimo: parseFloat(p.precio_minimo),
+          fechaVigencia: p.fecha_vigencia,
+        })));
+
+      setAnalisisData(productos); 
+      
+      const orderToView = orders.find(o => o.id === cotizacionId);
+      setSelectedOrder(orderToView); 
+      setIsModalOpen(true); 
+
+      setToast({ message: 'Cotización analizada correctamente', type: 'success' });
+
+    } catch (err) {
+      console.error(`Error al analizar cotización ${cotizacionId}:`, err);
+      
+      if (err.response && err.response.status === 401) {
+           setToast({ message: 'Token inválido o expirado. Vuelve a iniciar sesión.', type: 'error' });
+      } else {
+           setToast({ message: 'Error al analizar cotización', type: 'error' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const AnalisisModalContent = ({ productos }) => (
+    <div className={styles.itemsTable}>
+      <div className={styles.itemsHeader}>
+        <div><Zap size={16}/> Proveedor</div>
+        <div><FileText size={16}/> Código</div>
+        <div>Producto</div>
+        <div><DollarSign size={16}/> Precio Mínimo</div>
+        <div>Vigencia</div>
+      </div>
+      {productos.map((item, index) => (
+        <div key={index} className={styles.itemRow}>
+          <div className={styles.cell} style={{fontWeight: 'bold'}}>{item.proveedorNombre}</div>
+          <div className={styles.cell}>{item.codigo}</div>
+          <div className={styles.cell}>{item.nombre}</div>
+          <div className={styles.cell} style={{fontWeight: 'bold'}}>
+            ${item.precioMinimo.toFixed(2)}
+          </div>
+          <div className={styles.cell}>
+             {new Date(item.fechaVigencia.split(' ')[0]).toLocaleDateString()}
+          </div>
+        </div>
+      ))}
+      {productos.length === 0 && (
+          <div className={styles.emptyState}>
+             No se encontraron productos con precios.
+          </div>
+      )}
+    </div>
+  );
+
 
   return (
     <div className={styles.pageContainer}>
@@ -128,52 +216,12 @@ useEffect(() => {
                     />
                     <ActionButton
                       type="calc"
-                      onClick={() => {
-                        setProviderFilter(order.provider);
-                        setViewMode('invoiceSummary');
-                      }}
+                      onClick={() => handleCalcularCotizacion(order.id)}
                       size="small"
                     />
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'invoiceSummary' && (
-          <div className={styles.invoicesTable}>
-            <div className={styles.tableHeader}>
-              <div className={styles.headerCell}>Folio</div>
-              <div className={styles.headerCell}>Fecha</div>
-              <div className={styles.headerCell}>Serie</div>
-              <div className={styles.headerCell}>Proveedor</div>
-              <div className={styles.headerCell}>Subtotal</div>
-              <div className={styles.headerCell}>IVA</div>
-              <div className={styles.headerCell}>Total</div>
-              <div className={styles.headerCell}>Acciones</div>
-            </div>
-            <div className={styles.tableBody}>
-              {invoices
-                .filter(inv => !providerFilter || inv.provider === providerFilter)
-                .map((invoice) => (
-                  <div key={invoice.id} className={styles.invoiceRow}>
-                    <div className={styles.cell}>{invoice.folio}</div>
-                    <div className={styles.cell}>{new Date(invoice.date).toLocaleDateString()}</div>
-                    <div className={styles.cell}>{invoice.series}</div>
-                    <div className={styles.cell}>{invoice.provider}</div>
-                    <div className={styles.cell}>${invoice.subtotal.toFixed(2)}</div>
-                    <div className={styles.cell}>${invoice.iva.toFixed(2)}</div>
-                    <div className={styles.cell}>${invoice.total.toFixed(2)}</div>
-                    <div className={styles.actions}>
-                      <ActionButton
-                        type="view"
-                        onClick={() => handleViewInvoice(invoice)}
-                        size="small"
-                      />
-                    </div>
-                  </div>
-                ))}
             </div>
           </div>
         )}
@@ -190,20 +238,26 @@ useEffect(() => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           title={
-            viewMode === 'orders'
-              ? 'Historial de precios unitarios por producto'
-              : 'Detalle de productos en factura'
+            analisisData
+              ? `Análisis de precios para COT-${selectedOrder?.orderNumber.split('-')[1]}`
+              : 'Detalle de Cotización'
           }
           size="large"
         >
-          {viewMode === 'orders' && selectedOrder && (
+          {/* Muestra la tabla de ANÁLISIS si la tenemos */}
+          {selectedOrder && analisisData && (
+             <AnalisisModalContent productos={analisisData} />
+          )}
+
+          {/* Muestra la tabla de Detalle de ORDEN si NO tenemos análisis (Solo vista de order) */}
+          {viewMode === 'orders' && selectedOrder && !analisisData && (
             <div className={styles.itemsTable}>
               <div className={styles.itemsHeader}>
                 <div>Código producto</div>
                 <div>Nombre producto</div>
-                <div>Último precio unitario</div>
+                <div>Precio Unitario</div>
                 <div>Cantidad</div>
-                <div>Último importe</div>
+                <div>Importe</div>
               </div>
               {selectedOrder.items.map((item, index) => (
                 <div key={index} className={styles.itemRow}>
@@ -214,33 +268,6 @@ useEffect(() => {
                   <div className={styles.itemTotal}>${item.total.toFixed(2)}</div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {viewMode === 'invoiceSummary' && selectedInvoice && (
-            <div className={styles.itemsTable}>
-              <div className={styles.itemsHeader}>
-                <div>Código producto</div>
-                <div>Nombre producto</div>
-                <div>Precio unitario</div>
-                <div>Cantidad</div>
-                <div>Importe</div>
-              </div>
-              {selectedInvoice.items.map((item, index) => (
-                <div key={index} className={styles.itemRow}>
-                  <div className={styles.cell}>{item.code}</div>
-                  <div className={styles.cell}>{item.name}</div>
-                  <div className={styles.cell}>${item.unitPrice.toFixed(2)}</div>
-                  <div className={styles.cell}>{item.quantity}</div>
-                  <div className={styles.itemTotal}>${item.amount.toFixed(2)}</div>
-                </div>
-              ))}
-              <div className={styles.totalRow}>
-                <div></div>
-                <div></div>
-                <div className={styles.totalLabel}>Total:</div>
-                <div className={styles.totalAmount}>${selectedInvoice.total.toFixed(2)}</div>
-              </div>
             </div>
           )}
         </Modal>
