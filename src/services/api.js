@@ -488,14 +488,19 @@ export const getProviderProductPrices = async (token) => {
 
 
 
-export const analizarCotizacion = async (token, cotizacionId) => {
-  console.log(token)
+export const analizarCotizacion = async (cotizacionId, token) => {
+  if (!Number.isInteger(cotizacionId)) {
+    console.warn('ID inválido en analizarCotizacion:', cotizacionId);
+    console.trace();
+    return null;
+  }
+
   try {
     const response = await axios.post(
-       `${API_BASE_URL}/cotizaciones/analizar/${cotizacionId}`,
+      `${API_BASE_URL}/cotizaciones/analizar/${cotizacionId}`,
       null,
       {
-        headers: {
+          headers: {
           'X-Authorization': token,
         },
       }
@@ -503,7 +508,7 @@ export const analizarCotizacion = async (token, cotizacionId) => {
     return response.data;
   } catch (error) {
     console.error(`Error al analizar cotización ${cotizacionId}:`, error);
-    throw error;
+    return null;
   }
 };
 

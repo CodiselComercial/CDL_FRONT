@@ -24,6 +24,8 @@ const PurchaseOrdersPage = () => {
         }
         const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
 
+        console.log(data);
+
         const mapped = data.map(cot => ({
           id: cot.CIDDOCUMENTO,
           orderNumber: `COT-${cot.CFOLIO}`,
@@ -38,6 +40,7 @@ const PurchaseOrdersPage = () => {
             price: mov.CPRECIO,
             total: mov.CTOTAL
           }))
+          
         }));
 
         setOrders(mapped);
@@ -86,54 +89,52 @@ const PurchaseOrdersPage = () => {
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
 
-  const handleCalcularCotizacion = async (cotizacionId) => {
-    setLoading(true);
+const handleCalcularCotizacion = async (cotizacionId) => {
+  if (!Number.isInteger(cotizacionId)) {
+    console.warn('ID inválido para cotización:', cotizacionId);
+    console.trace();
+    return;
+  }
 
-    let token = localStorage.getItem('jwtToken');
-    
-    if (!token) {
-      console.error('Error: No se encontró token (jwtToken) en localStorage.');
-      setToast({ message: 'Error de autenticación: No se encontró token', type: 'error' });
-      setLoading(false);
-      return; 
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    setToast({ message: 'No se encontró token de autenticación', type: 'error' });
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const result = await analizarCotizacion(cotizacionId, token);
+
+    if (!result || typeof result !== 'object') {
+      setToast({ message: 'No se pudo analizar la cotización. Verifica tu sesión o el backend.', type: 'error' });
+      return;
     }
-    
-    // LIMPIEZA DEL TOKEN
-    token = token.replace(/JWT: /g, '').replace(/"/g, '').trim(); 
-    console.log('Token DESPUÉS de la limpieza:', token);
 
-    try {
-      const result = await analizarCotizacion(token, cotizacionId);
+    const productos = Object.values(result)
+      .flatMap(prov => prov.productos.map(p => ({
+        proveedorNombre: prov.nombre,
+        codigo: p.codigo,
+        nombre: p.nombre,
+        precioMinimo: parseFloat(p.precio_minimo),
+        fechaVigencia: p.fecha_vigencia || null,
+      })));
 
-      const productos = Object.values(result)
-        .flatMap(prov => prov.productos.map(p => ({
-          proveedorNombre: prov.nombre,
-          codigo: p.codigo,
-          nombre: p.nombre,
-          precioMinimo: parseFloat(p.precio_minimo),
-          fechaVigencia: p.fecha_vigencia,
-        })));
+    setAnalisisData(productos);
+    const orderToView = orders.find(o => o.id === cotizacionId);
+    setSelectedOrder(orderToView);
+    setIsModalOpen(true);
+    setToast({ message: 'Cotización analizada correctamente', type: 'success' });
 
-      setAnalisisData(productos); 
-      
-      const orderToView = orders.find(o => o.id === cotizacionId);
-      setSelectedOrder(orderToView); 
-      setIsModalOpen(true); 
+  } catch (err) {
+    console.error(`Error al analizar cotización ${cotizacionId}:`, err);
+    setToast({ message: 'Error al analizar cotización', type: 'error' });
+  } finally {
+    setLoading(false);
+  }
+};
 
-      setToast({ message: 'Cotización analizada correctamente', type: 'success' });
 
-    } catch (err) {
-      console.error(`Error al analizar cotización ${cotizacionId}:`, err);
-      
-      if (err.response && err.response.status === 401) {
-           setToast({ message: 'Token inválido o expirado. Vuelve a iniciar sesión.', type: 'error' });
-      } else {
-           setToast({ message: 'Error al analizar cotización', type: 'error' });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const AnalisisModalContent = ({ productos }) => (
     <div className={styles.itemsTable}>
@@ -216,9 +217,14 @@ const PurchaseOrdersPage = () => {
                     />
                     <ActionButton
                       type="calc"
-                      onClick={() => handleCalcularCotizacion(order.id)}
+                      onClick={() => {
+                        console.log('Cotización seleccionada desde botón:', order.id);
+                        handleCalcularCotizacion(order.id);
+                      }}
                       size="small"
                     />
+
+
                   </div>
                 </div>
               ))}
@@ -244,12 +250,10 @@ const PurchaseOrdersPage = () => {
           }
           size="large"
         >
-          {/* Muestra la tabla de ANÁLISIS si la tenemos */}
           {selectedOrder && analisisData && (
              <AnalisisModalContent productos={analisisData} />
           )}
 
-          {/* Muestra la tabla de Detalle de ORDEN si NO tenemos análisis (Solo vista de order) */}
           {viewMode === 'orders' && selectedOrder && !analisisData && (
             <div className={styles.itemsTable}>
               <div className={styles.itemsHeader}>
