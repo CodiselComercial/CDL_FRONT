@@ -154,8 +154,11 @@ const handleCalcularCotizacion = async (cotizacionId) => {
             ${item.precioMinimo.toFixed(2)}
           </div>
           <div className={styles.cell}>
-             {new Date(item.fechaVigencia.split(' ')[0]).toLocaleDateString()}
+            {item.fechaVigencia
+              ? new Date(item.fechaVigencia).toLocaleDateString()
+              : 'Sin fecha'}
           </div>
+
         </div>
       ))}
       {productos.length === 0 && (
