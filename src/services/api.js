@@ -496,7 +496,7 @@ export const analizarCotizacion = async (cotizacionId, token) => {
   }
 
   try {
-    const response = await axios.post(
+    const response = await axios.get(
       `${API_BASE_URL}/cotizaciones/analizar/${cotizacionId}`,
       null,
       {
