@@ -116,6 +116,7 @@ const handleCalcularCotizacion = async (cotizacionId) => {
         proveedorNombre: prov.nombre,
         codigo: p.codigo,
         nombre: p.nombre,
+        cantidad: p.cantidad || 1,
         precioMinimo: parseFloat(p.precio_minimo),
         fechaVigencia: p.fecha_vigencia || null,
       })));
@@ -135,39 +136,51 @@ const handleCalcularCotizacion = async (cotizacionId) => {
 };
 
 
-
-  const AnalisisModalContent = ({ productos }) => (
-    <div className={styles.itemsTable}>
-      <div className={styles.itemsHeader}>
-        <div><Zap size={16}/> Proveedor</div>
-        <div><FileText size={16}/> Código</div>
-        <div>Producto</div>
-        <div><DollarSign size={16}/> Precio Mínimo</div>
-        <div>Vigencia</div>
+const AnalisisModalContent = ({ productos }) => {
+  if (productos.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        No se encontraron productos con precios.
       </div>
-      {productos.map((item, index) => (
-        <div key={index} className={styles.itemRow}>
-          <div className={styles.cell} style={{fontWeight: 'bold'}}>{item.proveedorNombre}</div>
-          <div className={styles.cell}>{item.codigo}</div>
-          <div className={styles.cell}>{item.nombre}</div>
-          <div className={styles.cell} style={{fontWeight: 'bold'}}>
-            ${item.precioMinimo.toFixed(2)}
-          </div>
-          <div className={styles.cell}>
-            {item.fechaVigencia
-              ? new Date(item.fechaVigencia).toLocaleDateString()
-              : 'Sin fecha'}
-          </div>
+    );
+  }
 
-        </div>
-      ))}
-      {productos.length === 0 && (
-          <div className={styles.emptyState}>
-             No se encontraron productos con precios.
-          </div>
-      )}
+  return (
+    <div className={styles.analysisContainer}>
+      <h3 className={styles.analysisTitle}>
+        Cotización: {selectedOrder?.orderNumber} | Proveedor: {selectedOrder?.provider}
+      </h3>
+
+      <table className={styles.analysisTable}>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Mínimo</th>
+            <th>Vigencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {productos.map((item, index) => (
+            <tr key={index}>
+              <td>{item.codigo}</td>
+              <td>{item.nombre}</td>
+              <td>{item.cantidad}</td>
+              <td>${item.precioMinimo.toFixed(2)}</td>
+              <td>
+                {item.fechaVigencia
+                  ? new Date(item.fechaVigencia).toLocaleDateString()
+                  : 'Sin fecha'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
+};
+
 
 
   return (
