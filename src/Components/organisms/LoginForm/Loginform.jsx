@@ -61,7 +61,8 @@ const LoginForm = ({ onLogin }) => {
     <form className={styles.loginForm} onSubmit={handleSubmit}>
       <div className={styles.logoContainer}>
         <img 
-          src="https://codisel.com.mx/wp-content/uploads/2019/02/logo-codisel-web-1.png" 
+          src="https://cdn-icons-png.flaticon.com/512/10871/10871903.png"
+          //src="https://codisel.com.mx/wp-content/uploads/2019/02/logo-codisel-web-1.png" 
           alt="Logo de Codisel" 
           className={styles.logo}
         />
