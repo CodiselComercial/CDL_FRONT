@@ -332,3 +332,41 @@
 .invoicesTable { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
 .invoiceRow { display: grid; grid-template-columns: 1fr 1fr 1fr 2fr 1fr 1fr 1fr 1fr; border-bottom: 1px solid #f3f4f6; }
 .invoiceRow:hover { background-color: #f9fafb; }
+.analysisContainer {
+  max-height: 400px; /* Altura máxima visible */
+  overflow-y: auto;  /* Scroll vertical si hay muchos productos */
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Título arriba de la tabla */
+.analysisTitle {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+/* Tabla completa */
+.analysisTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Celdas */
+.analysisTable th,
+.analysisTable td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+/* Encabezado fijo */
+.analysisTable th {
+  position: sticky;
+  top: 0;
+  background-color: #f5f5f5;
+  font-weight: bold;
+  z-index: 1;
+}
+
