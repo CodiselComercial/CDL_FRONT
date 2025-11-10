@@ -7,12 +7,12 @@ import ProductForm from '../Components/molecules/ProductForm/ProductForm.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProductCrudPage.module.css';
 import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
-import { addProduct, getProductList, editProduct, deleteProduct, syncProducts  } from '../services/api.js';
+import { addProduct, getProductList, editProduct, deleteProduct, syncProducts } from '../services/api.js';
 
 
 const ProductCrudPage = () => {
   const [products, setProducts] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -21,6 +21,7 @@ const ProductCrudPage = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('jwtToken');
         const data = await getProductList(token);
@@ -36,6 +37,8 @@ const ProductCrudPage = () => {
       } catch (err) {
         console.error('Error al cargar productos:', err);
         setToast({ message: 'Error al cargar productos', type: 'error' });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -126,20 +129,20 @@ const ProductCrudPage = () => {
   };
 
 
-const handleSyncProducts = async () => {
-  setIsSyncing(true); 
+  const handleSyncProducts = async () => {
+    setIsSyncing(true);
 
-  try {
-    const token = localStorage.getItem('jwtToken');
-    const result = await syncProducts(token);
-    setSyncResult(result);
-    setSyncModalOpen(true); 
-  } catch (err) {
-    setToast({ message: 'Error al sincronizar productos', type: 'error' });
-  } finally {
-    setIsSyncing(false); 
-  }
-};
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const result = await syncProducts(token);
+      setSyncResult(result);
+      setSyncModalOpen(true);
+    } catch (err) {
+      setToast({ message: 'Error al sincronizar productos', type: 'error' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
 
 
@@ -150,6 +153,14 @@ const handleSyncProducts = async () => {
 
   return (
     <div className={styles.pageContainer}>
+      {loading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingModal}>
+            <p>Cargando productos...</p>
+          </div>
+        </div>
+      )}
+
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
@@ -166,7 +177,7 @@ const handleSyncProducts = async () => {
             Agregar Producto
           </AddButton>
 
-          <SyncButton  onClick={handleSyncProducts}>
+          <SyncButton onClick={handleSyncProducts}>
             Sincronizar Productos
           </SyncButton >
 
@@ -238,7 +249,7 @@ const handleSyncProducts = async () => {
 
         <Modal
           isOpen={isSyncing}
-          onClose={() => {}}
+          onClose={() => { }}
           title="Sincronizando productos..."
           size="small"
         >

@@ -11,9 +11,11 @@ import { getUserList, addUser, editUser, deleteUser    } from '../services/api.j
 const UserCrudPage = () => {
 
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('jwtToken');
       const data = await getUserList(token, 1, 0);
@@ -30,6 +32,8 @@ const UserCrudPage = () => {
     } catch (err) {
       console.error('Error al cargar usuarios:', err);
       setToast({ message: 'Error al cargar usuarios', type: 'error' });
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -137,6 +141,13 @@ const handleSaveUser = async (formData) => {
 
   return (
     <div className={styles.pageContainer}>
+        {loading && (
+              <div className={styles.loadingOverlay}>
+                <div className={styles.loadingModal}>
+                  <p>Cargando Usuarios...</p>
+                </div>
+              </div>
+            )}
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
