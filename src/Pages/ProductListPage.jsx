@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import ProductGrid from '../Components/molecules/ProductGrid/ProductGrid.jsx';
 import ProviderList from '../Components/molecules/ProviderList/ProviderList.jsx';
@@ -9,35 +9,43 @@ import { getProductWithProviders } from '../services/api.js';
 
 
 const ProductListPage = () => {
+  const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
 
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const data = await getProductWithProviders(token);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const data = await getProductWithProviders(token);
 
-      const mapped = data.map(p => ({
-        id: p.id,
-        name: p.nombre,
-        unit: p.unidad,
-        image: p.foto || null,
-        providers: p.proveedores.map(pr => ({
-          name: pr.nombre,
-          company: `Proveedor ${pr.codigo}`,
-          price: parseFloat(pr.precio),
-          status: 'activo',
-        })),
-      }));
+        const mapped = data.map(p => ({
+          id: p.id,
+          name: p.nombre,
+          unit: p.unidad,
+          image: p.foto || null,
+          providers: p.proveedores.map(pr => ({
+            name: pr.nombre,
+            company: `Proveedor ${pr.codigo}`,
+            price: parseFloat(pr.precio),
+            status: 'activo',
+          })),
+        }));
 
-      setProducts(mapped);
-    } catch (err) {
-      console.error('Error al cargar productos:', err);
-    }
-  };
+        setProducts(mapped);
+      } catch (err) {
+        console.error('Error al cargar productos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchProducts();
-}, []);
+    fetchProducts();
+  }, []);
+
+
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,6 +66,14 @@ useEffect(() => {
 
   return (
     <div className={styles.pageContainer}>
+      {loading && (
+  <div className={styles.loadingOverlay}>
+    <div className={styles.loadingModal}>
+      <p>Cargando productos...</p>
+    </div>
+  </div>
+)}
+
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
@@ -74,6 +90,15 @@ useEffect(() => {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar producto..."
         />
+
+        {loading && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingModal}>
+              <p>Cargando productos...</p>
+            </div>
+          </div>
+        )}
+
 
         <ProductGrid
           products={filteredProducts}

@@ -147,6 +147,7 @@ const AnalisisModalContent = ({ productos }) => {
 
   return (
     <div className={styles.analysisContainer}>
+      
       <h3 className={styles.analysisTitle}>
         Cotización: {selectedOrder?.orderNumber} | Proveedor: {selectedOrder?.provider}
       </h3>
@@ -185,6 +186,14 @@ const AnalisisModalContent = ({ productos }) => {
 
   return (
     <div className={styles.pageContainer}>
+      {loading && (
+  <div className={styles.loadingOverlay}>
+    <div className={styles.loadingModal}>
+      <p>Cargando datos...</p>
+    </div>
+  </div>
+)}
+
       <div className={styles.contentContainer}>
         {viewMode === 'orders' && (
           <>
@@ -256,19 +265,31 @@ const AnalisisModalContent = ({ productos }) => {
           </div>
         )}
 
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          title={
-            analisisData
-              ? `Análisis de precios para COT-${selectedOrder?.orderNumber.split('-')[1]}`
-              : 'Detalle de Cotización'
-          }
-          size="large"
-        >
-          {selectedOrder && analisisData && (
-             <AnalisisModalContent productos={analisisData} />
-          )}
+      <Modal
+  isOpen={isModalOpen}
+  onClose={handleCloseModal}
+  title={
+    analisisData
+      ? `Análisis de precios para COT-${selectedOrder?.orderNumber.split('-')[1]}`
+      : 'Detalle de Cotización'
+  }
+  size="large"
+>
+  {analisisData && (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <button
+        className={styles.authorizeButton}
+        onClick={() => console.log('Autorización pendiente de implementación')}
+      >
+        Autorizar
+      </button>
+    </div>
+  )}
+
+  {selectedOrder && analisisData && (
+    <AnalisisModalContent productos={analisisData} />
+  )}
+
 
           {viewMode === 'orders' && selectedOrder && !analisisData && (
             <div className={styles.itemsTable}>

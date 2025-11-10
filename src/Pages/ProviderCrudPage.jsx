@@ -12,7 +12,7 @@ import { getProviderList, addProvider, editProvider, deleteProvider, syncProvide
 const ProviderCrudPage = () => {
 
   const [providers, setProviders] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
@@ -20,6 +20,7 @@ const ProviderCrudPage = () => {
 
   useEffect(() => {
     const fetchProviders = async () => {
+       setLoading(true); 
       try {
         const token = localStorage.getItem('jwtToken');
         const data = await getProviderList(token, 1, 0); // puedes ajustar paginación
@@ -33,13 +34,14 @@ const ProviderCrudPage = () => {
           address: p.direccion || '',
         }));
 
-        setProviders(mapped);
-      } catch (err) {
-        console.error('Error al cargar proveedores:', err);
-        setToast({ message: 'Error al cargar proveedores', type: 'error' });
-      }
-    };
-
+     setProviders(mapped);
+    } catch (err) {
+      console.error('Error al cargar proveedores:', err);
+      setToast({ message: 'Error al cargar proveedores', type: 'error' });
+    } finally {
+      setLoading(false); 
+    }
+  };
     fetchProviders();
   }, []);
 
@@ -146,6 +148,14 @@ const ProviderCrudPage = () => {
 
   return (
     <div className={styles.pageContainer}>
+      {loading && (
+  <div className={styles.loadingOverlay}>
+    <div className={styles.loadingModal}>
+      <p>Cargando proveedores...</p>
+    </div>
+  </div>
+)}
+
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
