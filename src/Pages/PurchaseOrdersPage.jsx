@@ -3,7 +3,7 @@ import { FileText, Calendar, Zap, DollarSign } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import styles from './PurchaseOrdersPage.module.css';
-import { getCotizaciones, analizarCotizacion } from '../services/api.js';
+import { getCotizaciones, analizarCotizacion, autorizarCotizacion } from '../services/api.js';
 
 const PurchaseOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -277,12 +277,30 @@ const AnalisisModalContent = ({ productos }) => {
 >
   {analisisData && (
     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-      <button
-        className={styles.authorizeButton}
-        onClick={() => console.log('Autorización pendiente de implementación')}
-      >
-        Autorizar
-      </button>
+          <button
+            className={styles.authorizeButton}
+            onClick={async () => {
+              try {
+                const token = localStorage.getItem('jwtToken');
+                const result = await autorizarCotizacion(selectedOrder?.id, token);
+
+                console.log('Cotización autorizada:', result);
+
+                setToast({
+                  message: result.respuesta_api?.message || 'Cotización autorizada correctamente',
+                  type: 'success',
+                });
+
+                setIsModalOpen(false); // opcional: cerrar modal
+              } catch (err) {
+                setToast({ message: 'Error al autorizar cotización', type: 'error' });
+              }
+            }}
+          >
+            Autorizar
+          </button>
+
+
     </div>
   )}
 

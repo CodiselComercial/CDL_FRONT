@@ -512,6 +512,44 @@ export const analizarCotizacion = async (cotizacionId, token) => {
 };
 
 
+export const autorizarCotizacion = async (cotizacionId, token) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/cotizaciones/autorizar/${cotizacionId}`,
+      {
+        method: 'POST',
+        headers: {
+          'X-Authorization': token,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    let respuestaApi = null;
+    try {
+      respuestaApi = JSON.parse(data.respuesta_api);
+    } catch {
+      respuestaApi = { message: data.respuesta_api };
+    }
+
+    return {
+      ...data,
+      respuesta_api: respuestaApi,
+    };
+  } catch (error) {
+    console.error(`Error al autorizar cotización ${cotizacionId}:`, error);
+    throw error;
+  }
+};
+
+
+
+
 
 
 
