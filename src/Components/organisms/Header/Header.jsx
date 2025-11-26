@@ -22,12 +22,7 @@ const Header = ({ currentPage, onPageChange, onLogout, userRole = 'proveedor' })
               >
                 Lista de Precios
               </NavButton>
-              <NavButton
-                active={currentPage === 'generalData'}
-                onClick={() => onPageChange('generalData')}
-              >
-                Datos Generales
-              </NavButton>
+             
             </>
           )}
           

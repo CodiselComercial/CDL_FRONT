@@ -12,54 +12,53 @@ const PurchaseOrdersPage = () => {
   const [toast, setToast] = useState(null);
 
   const [invoices, setInvoices] = useState([]);
-  const [analisisData, setAnalisisData] = useState(null); 
+  const [analisisData, setAnalisisData] = useState(null);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
+
+  const fetchCotizaciones = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        throw new Error('No se encontró token de autenticación');
+      }
+      const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
+
+      const mapped = data.map(cot => ({
+        id: cot.CIDDOCUMENTO,
+        orderNumber: `COT-${cot.CFOLIO}`,
+        date: cot.CFECHA.split('T')[0],
+        provider: cot.CRAZONSOCIAL,
+        status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
+        total: cot.CTOTAL,
+        items: cot.Movimientos.map(mov => ({
+          product: `Producto ${mov.CIDPRODUCTO}`,
+          quantity: mov.CUNIDADES,
+          unit: `Unidad ${mov.CIDUNIDAD}`,
+          price: mov.CPRECIO,
+          total: mov.CTOTAL
+        }))
+      }));
+
+      setOrders(mapped);
+    } catch (err) {
+      console.error('Error al cargar cotizaciones:', err);
+      setToast({ message: err.message || 'Error al cargar cotizaciones', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCotizaciones = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('jwtToken');
-        if (!token) {
-          throw new Error('No se encontró token de autenticación');
-        }
-        const data = await getCotizaciones(token, '2020-01-01', '2025-12-31', 1);
-
-        console.log(data);
-
-        const mapped = data.map(cot => ({
-          id: cot.CIDDOCUMENTO,
-          orderNumber: `COT-${cot.CFOLIO}`,
-          date: cot.CFECHA.split('T')[0],
-          provider: cot.CRAZONSOCIAL,
-          status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
-          total: cot.CTOTAL,
-          items: cot.Movimientos.map(mov => ({
-            product: `Producto ${mov.CIDPRODUCTO}`,
-            quantity: mov.CUNIDADES,
-            unit: `Unidad ${mov.CIDUNIDAD}`,
-            price: mov.CPRECIO,
-            total: mov.CTOTAL
-          }))
-          
-        }));
-
-        setOrders(mapped);
-      } catch (err) {
-        console.error('Error al cargar cotizaciones:', err);
-        setToast({ message: err.message || 'Error al cargar cotizaciones', type: 'error' });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCotizaciones();
   }, []);
+
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredOrders = orders; 
+  const filteredOrders = orders;
   const [providerFilter, setProviderFilter] = useState(null);
 
   const handleViewOrder = (order) => {
@@ -89,110 +88,110 @@ const PurchaseOrdersPage = () => {
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
 
-const handleCalcularCotizacion = async (cotizacionId) => {
-  if (!Number.isInteger(cotizacionId)) {
-    console.warn('ID inválido para cotización:', cotizacionId);
-    console.trace();
-    return;
-  }
-
-  const token = localStorage.getItem('jwtToken');
-  if (!token) {
-    setToast({ message: 'No se encontró token de autenticación', type: 'error' });
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const result = await analizarCotizacion(cotizacionId, token);
-
-    if (!result || typeof result !== 'object') {
-      setToast({ message: 'No se pudo analizar la cotización. Verifica tu sesión o el backend.', type: 'error' });
+  const handleCalcularCotizacion = async (cotizacionId) => {
+    if (!Number.isInteger(cotizacionId)) {
+      console.warn('ID inválido para cotización:', cotizacionId);
+      console.trace();
       return;
     }
 
-    const productos = Object.values(result)
-      .flatMap(prov => prov.productos.map(p => ({
-        proveedorNombre: prov.nombre,
-        codigo: p.codigo,
-        nombre: p.nombre,
-        cantidad: p.cantidad || 1,
-        precioMinimo: parseFloat(p.precio_minimo),
-        fechaVigencia: p.fecha_vigencia || null,
-      })));
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      setToast({ message: 'No se encontró token de autenticación', type: 'error' });
+      return;
+    }
 
-    setAnalisisData(productos);
-    const orderToView = orders.find(o => o.id === cotizacionId);
-    setSelectedOrder(orderToView);
-    setIsModalOpen(true);
-    setToast({ message: 'Cotización analizada correctamente', type: 'success' });
+    setLoading(true);
+    try {
+      const result = await analizarCotizacion(cotizacionId, token);
 
-  } catch (err) {
-    console.error(`Error al analizar cotización ${cotizacionId}:`, err);
-    setToast({ message: 'Error al analizar cotización', type: 'error' });
-  } finally {
-    setLoading(false);
-  }
-};
+      if (!result || typeof result !== 'object') {
+        setToast({ message: 'No se pudo analizar la cotización. Verifica tu sesión o el backend.', type: 'error' });
+        return;
+      }
+
+      const productos = Object.values(result)
+        .flatMap(prov => prov.productos.map(p => ({
+          proveedorNombre: prov.nombre,
+          codigo: p.codigo,
+          nombre: p.nombre,
+          cantidad: p.cantidad || 1,
+          precioMinimo: parseFloat(p.precio_minimo),
+          fechaVigencia: p.fecha_vigencia || null,
+        })));
+
+      setAnalisisData(productos);
+      const orderToView = orders.find(o => o.id === cotizacionId);
+      setSelectedOrder(orderToView);
+      setIsModalOpen(true);
+      setToast({ message: 'Cotización analizada correctamente', type: 'success' });
+
+    } catch (err) {
+      console.error(`Error al analizar cotización ${cotizacionId}:`, err);
+      setToast({ message: 'Error al analizar cotización', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
-const AnalisisModalContent = ({ productos }) => {
-  if (productos.length === 0) {
+  const AnalisisModalContent = ({ productos }) => {
+    if (productos.length === 0) {
+      return (
+        <div className={styles.emptyState}>
+          No se encontraron productos con precios.
+        </div>
+      );
+    }
+
     return (
-      <div className={styles.emptyState}>
-        No se encontraron productos con precios.
+      <div className={styles.analysisContainer}>
+
+        <h3 className={styles.analysisTitle}>
+          Cotización: {selectedOrder?.orderNumber} | Proveedor: {selectedOrder?.provider}
+        </h3>
+
+        <table className={styles.analysisTable}>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Mínimo</th>
+              <th>Vigencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productos.map((item, index) => (
+              <tr key={index}>
+                <td>{item.codigo}</td>
+                <td>{item.nombre}</td>
+                <td>{item.cantidad}</td>
+                <td>${item.precioMinimo.toFixed(2)}</td>
+                <td>
+                  {item.fechaVigencia
+                    ? new Date(item.fechaVigencia).toLocaleDateString()
+                    : 'Sin fecha'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
-  }
-
-  return (
-    <div className={styles.analysisContainer}>
-      
-      <h3 className={styles.analysisTitle}>
-        Cotización: {selectedOrder?.orderNumber} | Proveedor: {selectedOrder?.provider}
-      </h3>
-
-      <table className={styles.analysisTable}>
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio Mínimo</th>
-            <th>Vigencia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {productos.map((item, index) => (
-            <tr key={index}>
-              <td>{item.codigo}</td>
-              <td>{item.nombre}</td>
-              <td>{item.cantidad}</td>
-              <td>${item.precioMinimo.toFixed(2)}</td>
-              <td>
-                {item.fechaVigencia
-                  ? new Date(item.fechaVigencia).toLocaleDateString()
-                  : 'Sin fecha'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
+  };
 
 
 
   return (
     <div className={styles.pageContainer}>
       {loading && (
-  <div className={styles.loadingOverlay}>
-    <div className={styles.loadingModal}>
-      <p>Cargando datos...</p>
-    </div>
-  </div>
-)}
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingModal}>
+            <p>Cargando datos...</p>
+          </div>
+        </div>
+      )}
 
       <div className={styles.contentContainer}>
         {viewMode === 'orders' && (
@@ -208,9 +207,7 @@ const AnalisisModalContent = ({ productos }) => {
             </div>
 
             <div className={styles.actionsBar}>
-              <button className={styles.calculateButton} onClick={() => setViewMode('invoiceSummary')}>
-                Calcular órdenes de compra
-              </button>
+
             </div>
           </>
         )}
@@ -265,48 +262,56 @@ const AnalisisModalContent = ({ productos }) => {
           </div>
         )}
 
-      <Modal
-  isOpen={isModalOpen}
-  onClose={handleCloseModal}
-  title={
-    analisisData
-      ? `Análisis de precios para COT-${selectedOrder?.orderNumber.split('-')[1]}`
-      : 'Detalle de Cotización'
-  }
-  size="large"
->
-  {analisisData && (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-          <button
-            className={styles.authorizeButton}
-            onClick={async () => {
-              try {
-                const token = localStorage.getItem('jwtToken');
-                const result = await autorizarCotizacion(selectedOrder?.id, token);
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          title={
+            analisisData
+              ? `Análisis de precios para COT-${selectedOrder?.orderNumber.split('-')[1]}`
+              : 'Detalle de Cotización'
+          }
+          size="large"
+        >
+          {analisisData && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <button
+                className={styles.authorizeButton}
+                disabled={isAuthorizing}
+                onClick={async () => {
+                  setIsAuthorizing(true);
+                  try {
+                    const token = localStorage.getItem('jwtToken');
+                    const result = await autorizarCotizacion(selectedOrder?.id, token);
 
-                console.log('Cotización autorizada:', result);
+                    console.log('Cotización autorizada:', result);
 
-                setToast({
-                  message: result.respuesta_api?.message || 'Cotización autorizada correctamente',
-                  type: 'success',
-                });
+                    setToast({
+                      message: result.respuesta_api?.message || 'Cotización autorizada correctamente',
+                      type: 'success',
+                    });
 
-                setIsModalOpen(false); // opcional: cerrar modal
-              } catch (err) {
-                setToast({ message: 'Error al autorizar cotización', type: 'error' });
-              }
-            }}
-          >
-            Autorizar
-          </button>
+                    await fetchCotizaciones();
+
+                    setIsModalOpen(false);
+                  } catch (err) {
+                    setToast({ message: 'Error al autorizar cotización', type: 'error' });
+                  } finally {
+                    setIsAuthorizing(false);
+                  }
+                }}
+              >
+                {isAuthorizing ? 'Autorizando...' : 'Autorizar'}
+              </button>
 
 
-    </div>
-  )}
 
-  {selectedOrder && analisisData && (
-    <AnalisisModalContent productos={analisisData} />
-  )}
+
+            </div>
+          )}
+
+          {selectedOrder && analisisData && (
+            <AnalisisModalContent productos={analisisData} />
+          )}
 
 
           {viewMode === 'orders' && selectedOrder && !analisisData && (
