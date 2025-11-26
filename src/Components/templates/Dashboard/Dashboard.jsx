@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Header from '../../organisms/Header/Header.jsx';
 import PriceListPage from '../../../Pages/PriceListPage.jsx';
-import GeneralDataPage from '../../../Pages/GeneralDataPage.jsx';
 import ProductListPage from '../../../Pages/ProductListPage.jsx';
 import PurchaseOrdersPage from '../../../Pages/PurchaseOrdersPage.jsx';
 import ProductCrudPage from '../../../Pages/ProductCrudPage.jsx';
@@ -36,8 +35,6 @@ const handleLogout = async () => {
       // Páginas para proveedores
       case 'priceList':
         return <PriceListPage />;
-      case 'generalData':
-        return <GeneralDataPage />;
 
         
       
