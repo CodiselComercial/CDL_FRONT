@@ -54,7 +54,9 @@ useEffect(() => {
 }, [currentPage]);
 
 const filteredProducts = products.filter(p => {
-  const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const productName = (p.name || '').toLowerCase().trim();
+  const searchValue = (searchTerm || '').toLowerCase().trim();
+  const matchesSearch = productName.includes(searchValue);
   const matchesFeatured = !showFeatured || editedPrices[p.id];
   return matchesSearch && matchesFeatured && p.active;
 });
