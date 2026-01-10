@@ -1,0 +1,1 @@
+export const BASE_URL_API_SERVER = 'http://192.168.168.200:667';
