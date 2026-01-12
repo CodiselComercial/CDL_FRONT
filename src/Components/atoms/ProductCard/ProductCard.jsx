@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './ProductCard.module.css';
+import { BASE_URL_API_SERVER } from '../../../constants.js';
 
 const ProductCard = ({ product, onSelect, selected = false }) => {
   return (
@@ -10,7 +11,7 @@ const ProductCard = ({ product, onSelect, selected = false }) => {
       <div className={styles.imageContainer}>
         {product.image ? (
          <img
-            src={`https://arxsoftware.cloud/pedidoscodisel/files/${product.image}`}
+            src={`${BASE_URL_API_SERVER}/files/${product.image}`}
             alt={product.name}
             className={styles.productImage}
           />
