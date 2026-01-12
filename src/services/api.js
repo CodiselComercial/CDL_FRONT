@@ -2,7 +2,7 @@ import axios from 'axios';
 import { BASE_URL_API_SERVER } from '../constants.js';
 
 //const API_BASE_URL = 'https://arxsoftware.cloud/pedidoscodisel/api';
-const API_BASE_URL = 'http://192.168.168.200:667/api';
+//const API_BASE_URL = 'http://192.168.168.200:667/api';
 const API_BASE_URL = BASE_URL_API_SERVER + '/api';
 
 // Login function
