@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { BASE_URL_API_SERVER } from '../constants.js';
 
+//const API_BASE_URL = 'https://arxsoftware.cloud/pedidoscodisel/api';
+const API_BASE_URL = 'http://192.168.168.200:667/api';
 const API_BASE_URL = BASE_URL_API_SERVER + '/api';
 
 // Login function
@@ -325,15 +327,21 @@ export const addUser = async (token, userData) => {
 //EDITAR USUARIO
 export const editUser = async (token, userId, userData) => {
   try {
+    const payload = {
+      id: userId,
+      nombre: userData.username,
+      perfil: userData.role === 'admin' ? -1 : 1,
+      proveedor_id: userData.proveedor_id || null,
+    };
+
+    // Solo incluir clave si se proporciona una nueva contraseña
+    if (userData.password) {
+      payload.clave = userData.password;
+    }
+
     const response = await axios.post(
       `${API_BASE_URL}/edit/usuarios/${userId}`,
-      {
-        id: userId,
-        nombre: userData.username,
-        clave: userData.password,
-        perfil: userData.role === 'admin' ? -1 : 1,
-        proveedor_id: userData.proveedor_id || null,
-      },
+      payload,
       {
         headers: {
           'Content-Type': 'application/json',

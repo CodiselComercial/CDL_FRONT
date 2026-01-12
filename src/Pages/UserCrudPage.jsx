@@ -26,6 +26,7 @@ const UserCrudPage = () => {
         fullName: u.nombre, 
         email: `usuario${u.id}@sistema.com`, 
         role: u.perfil === -1 ? 'admin' : 'proveedor',
+        proveedor_id: u.proveedor_id || null,
       }));
 
       setUsers(mapped);
@@ -77,10 +78,16 @@ const handleSaveUser = async (formData) => {
     try {
       const payload = {
         username: formData.username,
-        password: formData.password || editingUser.password,
         role: formData.role,
-        proveedor_id: formData.proveedor_id || null,
+        proveedor_id: formData.role === 'proveedor' && formData.proveedor_id 
+          ? parseInt(formData.proveedor_id) 
+          : null,
       };
+
+      // Solo incluir password si se proporciona una nueva contraseña
+      if (formData.password && formData.password.trim() !== '') {
+        payload.password = formData.password;
+      }
 
       await editUser(token, editingUser.id, payload);
 
@@ -103,7 +110,9 @@ const handleSaveUser = async (formData) => {
         username: formData.username,
         password: formData.password,
         role: formData.role,
-        proveedor_id: formData.proveedor_id || null,
+        proveedor_id: formData.role === 'proveedor' && formData.proveedor_id 
+          ? parseInt(formData.proveedor_id) 
+          : null,
       };
 
       await addUser(token, payload);
