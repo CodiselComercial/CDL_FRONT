@@ -32,7 +32,8 @@ const PurchaseOrdersPage = () => {
         status: cot.CCANCELADO ? 'cancelada' : 'pendiente',
         total: cot.CTOTAL,
         items: cot.Movimientos.map(mov => ({
-          product: `Producto ${mov.CIDPRODUCTO}`,
+          codigoproducto: mov.CodigoProducto,
+          nombreproducto: mov.NombreProducto,
           quantity: mov.CUNIDADES,
           unit: `Unidad ${mov.CIDUNIDAD}`,
           price: mov.CPRECIO,
@@ -325,8 +326,8 @@ const PurchaseOrdersPage = () => {
               </div>
               {selectedOrder.items.map((item, index) => (
                 <div key={index} className={styles.itemRow}>
-                  <div className={styles.cell}>COD-{index + 1}</div>
-                  <div className={styles.cell}>{item.product}</div>
+                  <div className={styles.cell}>{item.codigoproducto}</div>
+                  <div className={styles.cell}>{item.nombreproducto}</div>
                   <div className={styles.cell}>${item.price.toFixed(2)}</div>
                   <div className={styles.cell}>{item.quantity}</div>
                   <div className={styles.itemTotal}>${item.total.toFixed(2)}</div>
