@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Input.module.css';
 
-const Input = ({ type, placeholder, value, onChange, name, required = true }) => {
+const Input = ({ type, placeholder, value, onChange, name, required = true, autoComplete }) => {
   return (
     <input
       className={styles.input}
@@ -11,6 +11,7 @@ const Input = ({ type, placeholder, value, onChange, name, required = true }) =>
       onChange={onChange}
       name={name}
       required={required}
+      autoComplete={autoComplete}
     />
   );
 };
