@@ -85,6 +85,7 @@ const LoginForm = ({ onLogin }) => {
         name="password"
         value={credentials.password}
         onChange={handleChange}
+        autoComplete="off"
       />
 
       {error && <p style={{ color: 'red' }}>{error}</p>}

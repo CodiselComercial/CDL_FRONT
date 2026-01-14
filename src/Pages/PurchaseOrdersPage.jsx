@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Zap, DollarSign } from 'lucide-react';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
+import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
 import styles from './PurchaseOrdersPage.module.css';
 import { getCotizaciones, analizarCotizacion, autorizarCotizacion } from '../services/api.js';
 
@@ -208,7 +209,9 @@ const PurchaseOrdersPage = () => {
             </div>
 
             <div className={styles.actionsBar}>
-
+              <SyncButton onClick={fetchCotizaciones} disabled={loading}>
+                Refrescar
+              </SyncButton>
             </div>
           </>
         )}

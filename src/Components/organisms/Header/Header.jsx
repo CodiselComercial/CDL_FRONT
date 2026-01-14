@@ -44,19 +44,19 @@ const Header = ({ currentPage, onPageChange, onLogout, userRole = 'proveedor' })
                 active={currentPage === 'productCrud'}
                 onClick={() => onPageChange('productCrud')}
               >
-                CRUD Productos
+                Productos
               </NavButton>
               <NavButton
                 active={currentPage === 'providerCrud'}
                 onClick={() => onPageChange('providerCrud')}
               >
-                CRUD Proveedores
+                Proveedores
               </NavButton>
               <NavButton
                 active={currentPage === 'userCrud'}
                 onClick={() => onPageChange('userCrud')}
               >
-                CRUD Usuarios
+                Usuarios
               </NavButton>
             </>
           )}
