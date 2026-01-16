@@ -4,10 +4,12 @@ import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import AddButton from '../Components/atoms/AddButton/AddButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import ProviderForm from '../Components/molecules/ProviderForm/ProviderForm.jsx';
+import ProviderPriorityModal from '../Components/molecules/ProviderPriorityModal/ProviderPriorityModal.jsx';
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './ProviderCrudPage.module.css';
 import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
-import { getProviderList, addProvider, editProvider, deleteProvider, syncProviders  } from '../services/api.js';
+import Button from '../Components/atoms/Button/Button.jsx';
+import { getProviderList, addProvider, editProvider, deleteProvider, syncProviders, updateProvidersPriority  } from '../services/api.js';
 
 const ProviderCrudPage = () => {
 
@@ -16,6 +18,7 @@ const ProviderCrudPage = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [priorityModalOpen, setPriorityModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -28,10 +31,13 @@ const ProviderCrudPage = () => {
         const mapped = data.map(p => ({
           id: p.id,
           company: p.empresa || p.nombre || 'Proveedor sin nombre',
+          nombre: p.nombre || p.empresa || 'Proveedor sin nombre',
+          codigo: p.codigo || '',
           representative: p.representante || '',
           email: p.email || '',
           phone: p.telefono || '',
           address: p.direccion || '',
+          prioridad: p.prioridad !== undefined ? p.prioridad : null,
         }));
 
      setProviders(mapped);
@@ -138,6 +144,38 @@ const ProviderCrudPage = () => {
   }
 };
 
+  const handleSavePriorities = async (providersWithPriority) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      setLoading(true);
+      
+      await updateProvidersPriority(token, providersWithPriority);
+      
+      // Recargar la lista de proveedores para reflejar los cambios
+      const data = await getProviderList(token, 1, 0);
+      const mapped = data.map(p => ({
+        id: p.id,
+        company: p.empresa || p.nombre || 'Proveedor sin nombre',
+        nombre: p.nombre || p.empresa || 'Proveedor sin nombre',
+        codigo: p.codigo || '',
+        representative: p.representante || '',
+        email: p.email || '',
+        phone: p.telefono || '',
+        address: p.direccion || '',
+        prioridad: p.prioridad !== undefined ? p.prioridad : null,
+      }));
+      
+      setProviders(mapped);
+      setPriorityModalOpen(false);
+      setToast({ message: 'Prioridades actualizadas correctamente', type: 'success' });
+    } catch (err) {
+      console.error('Error al actualizar prioridades:', err);
+      setToast({ message: 'Error al actualizar prioridades', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
 
 
@@ -172,6 +210,9 @@ const ProviderCrudPage = () => {
             Agregar Proveedor
           </AddButton>
 
+          <Button onClick={() => setPriorityModalOpen(true)}>
+            Priorizar Proveedores
+          </Button>
 
           <SyncButton onClick={handleSyncProviders}>
             Sincronizar Proveedores
@@ -266,6 +307,19 @@ const ProviderCrudPage = () => {
     ) : (
       <p>No se recibió respuesta del servidor.</p>
     )}
+  </Modal>
+
+  <Modal
+    isOpen={priorityModalOpen}
+    onClose={() => setPriorityModalOpen(false)}
+    title="Priorizar Proveedores"
+    size="large"
+  >
+    <ProviderPriorityModal
+      providers={providers}
+      onSave={handleSavePriorities}
+      onClose={() => setPriorityModalOpen(false)}
+    />
   </Modal>
 
 

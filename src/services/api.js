@@ -238,6 +238,7 @@ export const editProvider = async (token, providerId, providerData) => {
         id: providerData.id || providerId,
         codigo: providerData.codigo,
         nombre: providerData.company || providerData.nombre,
+        prioridad: providerData.prioridad !== undefined ? providerData.prioridad : undefined,
       },
       {
         headers: {
@@ -250,6 +251,27 @@ export const editProvider = async (token, providerId, providerData) => {
     return response.data;
   } catch (error) {
     console.error('Error al editar proveedor:', error);
+    throw error;
+  }
+};
+
+// ACTUALIZAR PRIORIDAD DE PROVEEDORES
+export const updateProvidersPriority = async (token, providersWithPriority) => {
+  try {
+    // Actualizar cada proveedor con su nueva prioridad
+    const updatePromises = providersWithPriority.map((provider) =>
+      editProvider(token, provider.id, {
+        id: provider.id,
+        codigo: provider.codigo,
+        nombre: provider.nombre || provider.company,
+        prioridad: provider.prioridad,
+      })
+    );
+
+    const results = await Promise.all(updatePromises);
+    return results;
+  } catch (error) {
+    console.error('Error al actualizar prioridades de proveedores:', error);
     throw error;
   }
 };
