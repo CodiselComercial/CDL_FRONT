@@ -1,9 +1,7 @@
 import axios from 'axios';
-//import { BASE_URL_API_SERVER } from '../constants.js';
+import { BASE_URL_API_SERVER } from '../constants.js';
 
-const API_BASE_URL = 'https://arxsoftware.cloud/pedidoscodisel/api';
-//const API_BASE_URL = 'http://192.168.168.200:667/api';
-//const API_BASE_URL = BASE_URL_API_SERVER + '/api';
+const API_BASE_URL = BASE_URL_API_SERVER + '/api';
 
 // Login function
 export const login = async (username, password) => {
@@ -49,8 +47,7 @@ export const getUserData = async (token) => {
   }
 };
 
-
-export const getProductList = async (token, page = 1) => {
+/**export const getProductList = async (token, page = 10) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/list/productos?page=${page}`, {
       headers: {
@@ -58,9 +55,46 @@ export const getProductList = async (token, page = 1) => {
       },
     });
 
+    console.log('Respuesta de getProductList:', response.data);
+
     return response.data.productos;
   } catch (error) {
     console.error('Error al obtener productos:', error);
+    throw error;
+  }
+};**/
+
+export const getProductList = async (token) => {
+  const allProducts = [];
+  let page = 1;
+  let total = 0;
+
+  try {
+    do {
+      const response = await axios.get(
+        `${API_BASE_URL}/list/productos?page=${page}`,
+        {
+          headers: {
+            'X-Authorization': token,
+          },
+        }
+      );
+
+      const { productos, totalRecordCount } = response.data;
+
+      if (page === 1) {
+        total = totalRecordCount;
+      }
+
+      allProducts.push(...productos);
+      page++;
+
+    } while (allProducts.length < total);
+
+    return allProducts;
+
+  } catch (error) {
+    console.error('Error al obtener todos los productos:', error);
     throw error;
   }
 };
@@ -184,7 +218,7 @@ export const deleteProduct = async (token, productoId) => {
 
 //get proveedores
 
-export const getProviderList = async (token, page = 1, start = 0) => {
+/**export const getProviderList = async (token, page = 1, start = 0) => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/list/proveedores?page=${page}&start=${start}`,
@@ -198,6 +232,45 @@ export const getProviderList = async (token, page = 1, start = 0) => {
     return response.data.proveedores;
   } catch (error) {
     console.error('Error al obtener proveedores:', error);
+    throw error;
+  }
+};**/
+
+export const getProviderList = async (token) => {
+  const allProviders = [];
+  let page = 1;
+  let start = 0;
+  let total = 0;
+
+  try {
+    do {
+      const response = await axios.get(
+        `${API_BASE_URL}/list/proveedores?page=${page}&start=${start}`,
+        {
+          headers: {
+            'X-Authorization': token,
+          },
+        }
+      );
+
+      const { proveedores, totalRecordCount } = response.data;
+
+      if (page === 1) {
+        total = totalRecordCount;
+      }
+
+      allProviders.push(...proveedores);
+
+      // normalmente start avanza igual al tamaño de página
+      start += proveedores.length;
+      page++;
+
+    } while (allProviders.length < total);
+
+    return allProviders;
+
+  } catch (error) {
+    console.error('Error al obtener todos los proveedores:', error);
     throw error;
   }
 };
