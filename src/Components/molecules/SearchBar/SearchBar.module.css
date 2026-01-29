@@ -38,6 +38,37 @@
   color: #9ca3af !important;
 }
 
+.buttonsContainer {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.exportButton {
+  padding: 12px 24px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exportButton:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.exportButton:active {
+  transform: translateY(0);
+}
+
 @media (min-width: 640px) {
   .searchContainer {
     flex-direction: row;
@@ -47,5 +78,9 @@
   
   .searchInputContainer {
     flex: 1;
+  }
+  
+  .buttonsContainer {
+    flex-wrap: nowrap;
   }
 }

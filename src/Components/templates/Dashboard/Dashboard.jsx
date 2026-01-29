@@ -6,6 +6,7 @@ import PurchaseOrdersPage from '../../../Pages/PurchaseOrdersPage.jsx';
 import ProductCrudPage from '../../../Pages/ProductCrudPage.jsx';
 import ProviderCrudPage from '../../../Pages/ProviderCrudPage.jsx';
 import UserCrudPage from '../../../Pages/UserCrudPage.jsx';
+import ProviderPasswordPage from '../../../Pages/ProviderPasswordPage.jsx';
 import styles from './Dashboard.module.css';
 import { logout } from '../../../services/api.js';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +36,8 @@ const handleLogout = async () => {
       // Páginas para proveedores
       case 'priceList':
         return <PriceListPage />;
+      case 'providerPassword':
+        return <ProviderPasswordPage />;
 
         
       
