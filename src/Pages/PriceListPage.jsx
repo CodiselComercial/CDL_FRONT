@@ -8,6 +8,7 @@ import ProductTable from '../Components/organisms/ProductTable/ProductTable.jsx'
 import Toast from '../Components/atoms/Toast/Toast.jsx';
 import styles from './PriceListPage.module.css';
 import { getProductList, saveProductPrice, getLastProductPrice, getProviderProductPrices } from '../services/api.js';
+import * as XLSX from 'xlsx';
 
 const PriceListPage = () => {
 const [products, setProducts] = useState([]);
@@ -119,6 +120,57 @@ const handleConfirmDate = async () => {
   }
 };
 
+const handleExportExcel = async () => {
+  try {
+    setLoading(true);
+    // Obtener todos los productos del backend (no solo los filtrados)
+    const token = localStorage.getItem('jwtToken');
+    const productData = await getProviderProductPrices(token);
+
+    // Filtrar solo los productos que tienen precio (mayor a 0)
+    const productsWithPrice = productData.filter(p => {
+      const precio = p.precio?.precio ? parseFloat(p.precio.precio) : 0;
+      return typeof precio === 'number' && !isNaN(precio) && precio > 0;
+    });
+
+    // Preparar los datos para Excel solo con productos que tienen precio
+    const excelData = productsWithPrice.map((p, index) => {
+      const precio = p.precio?.precio ? parseFloat(p.precio.precio) : 0;
+      return {
+        'No.': index + 1,
+        'Producto': p.nombre || '',
+        'Unidad': p.unidad || '',
+        'Precio': precio,
+      };
+    });
+
+    // Crear el workbook y worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Lista de Precios');
+
+    // Ajustar el ancho de las columnas
+    const colWidths = [
+      { wch: 8 },  // No.
+      { wch: 40 }, // Producto
+      { wch: 15 }, // Unidad
+      { wch: 15 }, // Precio
+    ];
+    ws['!cols'] = colWidths;
+
+    // Generar el archivo Excel y descargarlo
+    const fileName = `Lista_Precios_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    setToast({ message: 'Excel exportado correctamente', type: 'success' });
+  } catch (err) {
+    console.error('Error al exportar Excel:', err);
+    setToast({ message: 'Error al exportar Excel', type: 'error' });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   
   return (
@@ -132,6 +184,7 @@ const handleConfirmDate = async () => {
       placeholder="Buscar producto..."
       showFeatured={showFeatured}
       onFeaturedToggle={() => setShowFeatured(!showFeatured)}
+      onExportExcel={handleExportExcel}
     />
 
     <ProductTable

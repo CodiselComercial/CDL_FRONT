@@ -4,7 +4,7 @@ import Title from '../../atoms/Title/Title';
 import FormField from '../../molecules/Forms/Form';
 import Button from '../../atoms/Button/Button';
 import styles from './LoginForm.module.css';
-import { login, getUserData } from '../../../services/api';
+import { login, getUserData, getUserIdFromJwt } from '../../../services/api';
 
 const LoginForm = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -39,7 +39,12 @@ const LoginForm = ({ onLogin }) => {
 
       localStorage.setItem('jwtToken', token);
    
-
+      // Extraer el userid del token JWT
+      const userId = getUserIdFromJwt(token);
+      if (userId) {
+        localStorage.setItem('userId', userId);
+        console.log('UserID extraído del token:', userId);
+      }
     
       // Obtener datos del usuario
       const userData = await getUserData(token);

@@ -22,6 +22,12 @@ const Header = ({ currentPage, onPageChange, onLogout, userRole = 'proveedor' })
               >
                 Lista de Precios
               </NavButton>
+              <NavButton
+                active={currentPage === 'providerPassword'}
+                onClick={() => onPageChange('providerPassword')}
+              >
+                Cambiar Contraseña
+              </NavButton>
              
             </>
           )}

@@ -1,7 +1,27 @@
 import axios from 'axios';
 import { BASE_URL_API_SERVER } from '../constants.js';
 
+//const API_BASE_URL = 'https://arxsoftware.cloud/pedidoscodisel/api';
+//const API_BASE_URL = 'http://192.168.168.200:667/api';
 const API_BASE_URL = BASE_URL_API_SERVER + '/api';
+
+// Función para decodificar JWT y extraer el userid
+export const getUserIdFromJwt = (token) => {
+  if (!token) return null;
+
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(payloadJson);
+
+    // El userid está en payload.security.userid según la estructura del token
+    // Ejemplo: {"security": {"userid": "2", ...}}
+    return payload.security?.userid || payload.userid || null;
+  } catch (e) {
+    console.error('Error al decodificar JWT:', e);
+    return null;
+  }
+};
 
 // Login function
 export const login = async (username, password) => {
@@ -27,6 +47,7 @@ export const login = async (username, password) => {
 //LOGOUT
 export const logout = () => {
   localStorage.removeItem('jwtToken');
+  localStorage.removeItem('userId');
 };
 
 
@@ -647,6 +668,89 @@ export const autorizarCotizacion = async (cotizacionId, token) => {
     };
   } catch (error) {
     console.error(`Error al autorizar cotización ${cotizacionId}:`, error);
+    throw error;
+  }
+};
+
+// CAMBIAR CONTRASEÑA DEL PROVEEDOR
+export const changeProviderPassword = async (token, passwordData) => {
+  try {
+    if (!token) {
+      throw new Error('No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.');
+    }
+    let userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      userId = getUserIdFromJwt(token);
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      }
+    }
+    
+    if (!userId) {
+      try {
+        const userData = await getUserData(token);
+        if (userData.id) {
+          userId = userData.id;
+          localStorage.setItem('userId', userId);
+        }
+      } catch (err) {
+        console.error('Error al obtener datos del usuario:', err);
+      }
+      
+      if (!userId) {
+        throw new Error('No se pudo obtener el ID del usuario. Por favor, inicia sesión nuevamente.');
+      }
+    }
+
+    const formData = new FormData();
+    formData.append('actual', passwordData.currentPassword);
+    formData.append('nueva', passwordData.newPassword);
+
+    const userIdNum = parseInt(userId, 10);
+    
+    if (!Number.isInteger(userIdNum)) {
+      throw new Error('ID de usuario inválido');
+    }
+
+    console.log('Enviando cambio de contraseña:', {
+      url: `${API_BASE_URL}/usuarios/cambia_clave/${userIdNum}`,
+      userId: userIdNum,
+      actualLength: passwordData.currentPassword?.length,
+      nuevaLength: passwordData.newPassword?.length,
+      tokenPresent: !!token,
+      tokenLength: token?.length
+    });
+    
+    for (let pair of formData.entries()) {
+      console.log('FormData:', pair[0], '=', pair[1]?.substring(0, 3) + '...');
+    }
+
+    const response = await axios.post(
+      `${API_BASE_URL}/usuarios/cambia_clave/${userIdNum}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': token, // Usar Authorization como muestra el curl completo
+        },
+      }
+    );
+
+    console.log('Respuesta exitosa:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al cambiar contraseña del proveedor:', error);
+    console.error('Error completo:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      throw new Error('Error de conexión. Verifica tu conexión a internet.');
+    }
+    
     throw error;
   }
 };
