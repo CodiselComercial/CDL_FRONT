@@ -69,6 +69,11 @@ const ProductListPage = () => {
       {loading && (
   <div className={styles.loadingOverlay}>
     <div className={styles.loadingModal}>
+      <img
+            src="/css-loader.gif" 
+            alt="Cargando..."
+            className={styles.loadingGif}
+      />
       <p>Cargando productos...</p>
     </div>
   </div>
@@ -94,6 +99,11 @@ const ProductListPage = () => {
         {loading && (
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingModal}>
+              <img
+            src="/css-loader.gif" 
+            alt="Cargando..."
+            className={styles.loadingGif}
+            />
               <p>Cargando productos...</p>
             </div>
           </div>

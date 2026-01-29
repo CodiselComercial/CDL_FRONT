@@ -161,7 +161,7 @@ const handleSaveUser = async (formData) => {
         <div className={styles.header}>
           <div className={styles.titleSection}>
             <Users className={styles.icon} size={32} />
-            <h2 className={styles.title}>CRUD de Usuarios</h2>
+            <h2 className={styles.title}>Catálogo de usuarios</h2>
           </div>
           <p className={styles.subtitle}>
             Administra los usuarios que acceden al sistema

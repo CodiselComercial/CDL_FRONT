@@ -156,6 +156,11 @@ const ProductCrudPage = () => {
       {loading && (
         <div className={styles.loadingOverlay}>
           <div className={styles.loadingModal}>
+            <img
+                        src="/css-loader.gif" 
+                        alt="Cargando..."
+                        className={styles.loadingGif}
+            />
             <p>Cargando productos...</p>
           </div>
         </div>
@@ -165,7 +170,7 @@ const ProductCrudPage = () => {
         <div className={styles.header}>
           <div className={styles.titleSection}>
             <Package className={styles.icon} size={32} />
-            <h2 className={styles.title}>CRUD de Productos</h2>
+            <h2 className={styles.title}>Catálogo de productos</h2>
           </div>
           <p className={styles.subtitle}>
             Administra los productos disponibles en el sistema

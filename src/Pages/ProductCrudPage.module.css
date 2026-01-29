@@ -247,3 +247,10 @@
   font-weight: bold;
   font-size: 1.2rem;
 }
+
+.loadingGif {
+  display: block;            /* clave */
+  margin: 0 auto 12px;       /* centra dentro del modal */
+  width: 64px;
+  height: 64px;
+}
