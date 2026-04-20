@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Calendar, Zap, DollarSign } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import ActionButton from '../Components/atoms/ActionButton/ActionButton.jsx';
 import Modal from '../Components/atoms/Modal/Modal.jsx';
 import SyncButton from '../Components/atoms/SyncButton/SyncButton.jsx';
@@ -88,6 +89,58 @@ const PurchaseOrdersPage = () => {
       rechazada: styles.rejected
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
+  };
+
+  const handleExportPdf = (order) => {
+    if (!order) return;
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 40;
+    let y = 40;
+
+    doc.setFontSize(18);
+    doc.text('Cotización / Orden de Compra', margin, y);
+    y += 30;
+
+    doc.setFontSize(12);
+    doc.text(`Número: ${order.orderNumber}`, margin, y);
+    y += 18;
+    doc.text(`Fecha: ${new Date(order.date).toLocaleDateString()}`, margin, y);
+    y += 18;
+    doc.text(`Proveedor: ${order.provider}`, margin, y);
+    y += 18;
+    doc.text(`Total: $${order.total.toFixed(2)}`, margin, y);
+    y += 28;
+
+    doc.setFontSize(12);
+    doc.text('Detalle de productos:', margin, y);
+    y += 18;
+    doc.setFontSize(11);
+    doc.text('Código | Producto | Precio unitario | Cantidad | Importe', margin, y);
+    y += 16;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(margin, y, 555, y);
+    y += 12;
+
+    order.items.forEach((item) => {
+      const line = `${item.codigoproducto} | ${item.nombreproducto} | $${item.price.toFixed(2)} | ${item.quantity} | $${item.total.toFixed(2)}`;
+      const lines = doc.splitTextToSize(line, 520);
+      lines.forEach((textLine) => {
+        if (y > 760) {
+          doc.addPage();
+          y = 40;
+        }
+        doc.text(textLine, margin, y);
+        y += 14;
+      });
+    });
+
+    if (y > 700) {
+      doc.addPage();
+      y = 40;
+    }
+
+    doc.save(`${order.orderNumber}.pdf`);
   };
 
   const handleCalcularCotizacion = async (cotizacionId) => {
@@ -277,7 +330,7 @@ const PurchaseOrdersPage = () => {
           size="large"
         >
           {analisisData && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginBottom: '1rem' }}>
               <button
                 className={styles.authorizeButton}
                 disabled={isAuthorizing}
@@ -294,8 +347,8 @@ const PurchaseOrdersPage = () => {
                       type: 'success',
                     });
 
+                    handleExportPdf(selectedOrder);
                     await fetchCotizaciones();
-
                     setIsModalOpen(false);
                   } catch (err) {
                     setToast({ message: 'Error al autorizar cotización', type: 'error' });
@@ -306,10 +359,13 @@ const PurchaseOrdersPage = () => {
               >
                 {isAuthorizing ? 'Autorizando...' : 'Autorizar'}
               </button>
-
-
-
-
+              <button
+                className={styles.authorizeButton}
+                type="button"
+                onClick={() => handleExportPdf(selectedOrder)}
+              >
+                Descargar PDF
+              </button>
             </div>
           )}
 
