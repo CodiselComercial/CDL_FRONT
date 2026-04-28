@@ -60,6 +60,8 @@ const PurchaseOrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [authorizationResult, setAuthorizationResult] = useState(null);
+  const [showJsonModal, setShowJsonModal] = useState(false);
 
   const filteredOrders = orders;
   const [providerFilter, setProviderFilter] = useState(null);
@@ -80,6 +82,35 @@ const PurchaseOrdersPage = () => {
     setSelectedOrder(null);
     setSelectedInvoice(null);
     setAnalisisData(null);
+    setAuthorizationResult(null);
+    setShowJsonModal(false);
+  };
+
+  const renderJsonModal = () => {
+    if (!authorizationResult) return null;
+
+    const jsonData = authorizationResult;
+    const prettyJson = JSON.stringify(jsonData, null, 2);
+
+    return (
+      <div style={{
+        background: '#1e1e1e',
+        color: '#d4d4d4',
+        padding: '20px',
+        borderRadius: '8px',
+        fontFamily: '"Fira Code", "Consolas", monospace',
+        fontSize: '13px',
+        maxHeight: '500px',
+        overflow: 'auto',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word'
+      }}>
+        <div style={{ marginBottom: '16px', borderBottom: '1px solid #3c3c3c', paddingBottom: '12px' }}>
+          <span style={{ color: '#4ec9b0', fontWeight: 'bold' }}>📋 Resultado de Autorización</span>
+        </div>
+        <pre style={{ margin: 0 }}>{prettyJson}</pre>
+      </div>
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -342,6 +373,9 @@ const PurchaseOrdersPage = () => {
 
                     console.log('Cotización autorizada:', result);
 
+                    setAuthorizationResult(result);
+                    setShowJsonModal(true);
+
                     setToast({
                       message: result.respuesta_api?.message || 'Cotización autorizada correctamente',
                       type: 'success',
@@ -349,7 +383,6 @@ const PurchaseOrdersPage = () => {
 
                     handleExportPdf(selectedOrder);
                     await fetchCotizaciones();
-                    setIsModalOpen(false);
                   } catch (err) {
                     setToast({ message: 'Error al autorizar cotización', type: 'error' });
                   } finally {
@@ -394,6 +427,26 @@ const PurchaseOrdersPage = () => {
               ))}
             </div>
           )}
+        </Modal>
+
+        <Modal
+          isOpen={showJsonModal}
+          onClose={() => setShowJsonModal(false)}
+          title="📋 Resultado de Autorización"
+          size="large"
+        >
+          {renderJsonModal()}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+            <button
+              className={styles.authorizeButton}
+              onClick={() => {
+                setShowJsonModal(false);
+                setIsModalOpen(false);
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
         </Modal>
       </div>
     </div>

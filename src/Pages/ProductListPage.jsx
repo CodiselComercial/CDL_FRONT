@@ -19,18 +19,20 @@ const ProductListPage = () => {
         const token = localStorage.getItem('jwtToken');
         const data = await getProductWithProviders(token);
 
-        const mapped = data.map(p => ({
-          id: p.id,
-          name: p.nombre,
-          unit: p.unidad,
-          image: p.foto || null,
-          providers: p.proveedores.map(pr => ({
-            name: pr.nombre,
-            company: `Proveedor ${pr.codigo}`,
-            price: parseFloat(pr.precio),
-            status: 'activo',
-          })),
-        }));
+        const mapped = data
+          .filter(p => p.estatus === 1)
+          .map(p => ({
+            id: p.id,
+            name: p.nombre,
+            unit: p.unidad,
+            image: p.foto || null,
+            providers: p.proveedores.map(pr => ({
+              name: pr.nombre,
+              company: `Proveedor ${pr.codigo}`,
+              price: parseFloat(pr.precio),
+              status: 'activo',
+            })),
+          }));
 
         setProducts(mapped);
       } catch (err) {
